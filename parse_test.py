@@ -14,6 +14,10 @@ def setup_tree_sitter():
     
     return parser
 
+def load_c_code(filename):
+    with open(filename, 'r') as file:
+        return file.read()
+
 def parse_c_code(parser, code):
     """Parse C code and return the syntax tree."""
     tree = parser.parse(bytes(code, "utf8"))
@@ -68,18 +72,7 @@ def analyze_c_code(code):
 
 # Example usage
 if __name__ == "__main__":
-    example_code = """
-    #include <stdio.h>
+    filename = 'simpleTB/simple1.c'  # Path to your C source file
+    c_code = load_c_code(filename)
     
-    int add(int a, int b) {
-        return a + b;
-    }
-    
-    int main() {
-        int result = add(5, 3);
-        printf("Result: %d\\n", result);
-        return 0;
-    }
-    """
-    
-    analyze_c_code(example_code)
+    analyze_c_code(c_code)
