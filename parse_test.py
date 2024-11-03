@@ -218,7 +218,7 @@ class CParser:
         elif node.type == 'string_literal':
             return self.extract_literal_value(node,code)
         
-        elif node.children[0].type == 'call_expression':
+        elif node.type == 'call_expression':
             # Handle function call expressions (e.g., func())
             expression = self.handle_function_call(node.children[0], code)
             return expression
@@ -590,8 +590,8 @@ def setup_tree_sitter():
 # Example usage
 if __name__ == "__main__":
     # Path to C file
-    filename = 'simpleTB/mid2.c'
-    target_function = 'reallocate_buffer'
+    filename = 'parserTesting/tests.c'
+    target_function = 'complexLoop'
     with open(filename, 'r') as file:
         c_code = file.read()
     
