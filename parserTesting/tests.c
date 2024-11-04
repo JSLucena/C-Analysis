@@ -91,3 +91,43 @@ void complexLoop() {
 
     printf("Sum: %d\nProduct: %d\n", sum, product);
 }
+
+void test3DArray() {
+    int array3D[2][3][4];           // 3D array of integers
+    array3D[1][2][3] = 42;          // Assign 42 to specific element
+    array3D[0][0][0] = array3D[1][2][3];  // Assign using another array element
+}
+
+void testPointerDereference() {
+    int x = 5;
+    int *ptr = &x;           // Pointer to x
+    int **ptr2 = &ptr;       // Pointer to pointer
+    *ptr = 10;               // Dereference ptr and set x to 10
+    **ptr2 = 15;             // Dereference ptr2 to set x to 15
+}
+
+void testPointerArithmetic() {
+    int arr[5] = {1, 2, 3, 4, 5};
+    int *ptr = arr;
+    int *ptr_offset = ptr + 2;    // Pointer arithmetic
+    int value = *(ptr + 3);       // Dereference with offset
+}
+
+void testPointerToArray() {
+    int matrix[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    int (*ptr_matrix)[3] = matrix;     // Pointer to an array of 3 ints
+    int value = *(*(ptr_matrix + 1) + 2);  // Access matrix[1][2] through pointer
+}
+
+void testPointerDifference() {
+    int numbers[4] = {10, 20, 30, 40};
+    int *p1 = numbers;
+    int *p2 = numbers + 2;
+    int diff = p2 - p1;           // Difference between pointers
+}
+
+void testPointerToArrayElement() {
+    int grid[2][2] = {{1, 2}, {3, 4}};
+    int *row = grid[1];            // Pointer to the second row
+    int item = *(row + 1);         // Access grid[1][1] through pointer offset
+}

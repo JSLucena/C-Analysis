@@ -3,7 +3,7 @@ import os
 import tree_sitter_c
 import warnings
 # Variable class
-
+target_function = 'simpleDeclarations'
 types = ['primitive_type']
 literals = ['char_literal', 'number_literal', 'string_literal']
 parse_not_required = ['{' , '}', '(', ')', ';' , 'for', 'comment']
@@ -24,6 +24,13 @@ class Parameter(Variable):
     def __repr__(self):
         return f"Parameter({self.name}: {self.var_type})"
 
+class Pointer(Variable):
+    def __init__(self, name, pointee_type, value=None):
+        super().__init__(name, pointee_type, value=value)
+        self.is_pointer = True  # Mark this as a pointer
+
+    def __repr__(self):
+        return f"Pointer(name={self.name}, type={self.type}, value={self.value})"
 # Base Instruction class
 class Instruction:
     def __init__(self, instruction_type):
@@ -61,8 +68,12 @@ class Control(Instruction):
             self.else_body.append(instruction)
 
     def __repr__(self):
-        return (f"{self.control_type}(init->{self.initialization}, cond->{self.condition}, "
-                f"update->{self.update}, body->{self.body}, else->{self.else_body})")
+        return (f"""{self.control_type}(
+                init->{self.initialization}, 
+                cond->{self.condition}, 
+                update->{self.update}, 
+                body->{self.body}, 
+                else->{self.else_body}) """)
 
 class Binary(Instruction):
     def __init__(self, operation, left, right):
@@ -296,7 +307,7 @@ class CParser:
         Returns a list of Declaration objects for multiple variables declared in a single statement.
         """
         declarations = []
-        declaration_nodes = [child for child in node.children if child.type in {'identifier', 'init_declarator', 'array_declarator'}]
+        declaration_nodes = [child for child in node.children if child.type in {'identifier', 'init_declarator', 'array_declarator', 'pointer_declarator'}]
         
         for declaration_node in declaration_nodes:
             identifier = None
@@ -591,7 +602,7 @@ def setup_tree_sitter():
 if __name__ == "__main__":
     # Path to C file
     filename = 'parserTesting/tests.c'
-    target_function = 'complexLoop'
+    
     with open(filename, 'r') as file:
         c_code = file.read()
     
