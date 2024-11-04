@@ -2,6 +2,7 @@ void simpleDeclarations() {
     int x;
     float y;
     char z = 'A';
+    char s[10] = "Hello";
     int arr[5];
 }
 
@@ -9,6 +10,9 @@ void declarationsWithAssignment() {
     int a = 10;
     float b = 5.5;
     int arr[3] = {1, 2, 3};
+    int arr[3][3][3] = {1, 2, 3, 
+    4, 5, 6, 
+    7, 8, 9};
 }
 
 void basicForLoop() {
@@ -67,8 +71,7 @@ void whileLoops() {
     do {
         j--;
     } while (j > 0);
-}
-
+}   
 
 void complexLoop() {
     int i, j, sum = 0, product = 1;

@@ -3,7 +3,7 @@ import os
 import tree_sitter_c
 import warnings
 # Variable class
-target_function = 'simpleDeclarations'
+target_function = 'testPointerToArrayElement'
 types = ['primitive_type']
 literals = ['char_literal', 'number_literal', 'string_literal']
 parse_not_required = ['{' , '}', '(', ')', ';' , 'for', 'comment']
@@ -96,6 +96,15 @@ class Unary(Instruction):
         prefix = self.operation if self.is_prefix else ""
         postfix = "" if self.is_prefix else self.operation
         return f"{prefix}{self.operand}{postfix}"
+    
+class PointerRef(Instruction):
+    def __init__(self, operation,operand):
+        super().__init__("PointerRef")
+        self.operation = operation
+        self.operand = operand
+
+    def __repr__(self):
+        return f"{self.instruction_type}({self.operation}{self.operand})"
     
 class Assignment(Instruction):
     def __init__(self, variable, value, operation="=", index=None):
@@ -226,20 +235,63 @@ class CParser:
 
         elif node.type == 'identifier':
             return node.text.decode('ascii')
-        elif node.type == 'string_literal':
+        elif node.type in literals:
             return self.extract_literal_value(node,code)
-        
+        elif node.type == 'initializer_list':
+            return self.extract_initializer_list(node,code)
         elif node.type == 'call_expression':
             # Handle function call expressions (e.g., func())
             expression = self.handle_function_call(node.children[0], code)
             return expression
+        elif node.type == 'init_declarator':
+            expr = self.handle_init_declarator(node,code)
+            return expr
+        elif node.type == 'array_declarator':
+            expr = self.handle_array_declarator(node,code)
+            return expr
+        elif node.type == 'subscript_expression':
+            expr = self.handle_subscription_expression(node,code)
+            return expr
+        elif node.type == 'pointer_declarator':
+            expr = self.handle_pointer_declarator(node,code)
+            return expr
+        elif node.type == 'pointer_expression':
+            expr = self.handle_pointer_expression(node,code)
+            return expr
+        elif node.type == 'parenthesized_expression' or node.type == 'parenthesized_declarator':
+            expr = node.named_children[0]
+            expr = self.process_node(expr,code)
+            return expr
         else:
             if not node.type in parse_not_required:
                 print(f'Cannot parse {node.type}')
                 return None
 
+    def handle_pointer_expression(self,node,code):
+        id = node.named_children[0]
+        if id.type == 'identifier':
+            id = node.named_children[0].text.decode('ascii')
+        else:
+            id = self.process_node(id,code)
+        ptr = node.children[0].text.decode('ascii')
+        
+        return PointerRef(ptr,id)
+    def handle_pointer_declarator(self,node,code):
+        ptrs = ""
+        inner_node = node.named_children[0]       
+        if inner_node.type == 'identifier':
+            var_name = node.text.decode('ascii')
+            return (Pointer(var_name,None,None))
+        else:
+            inst = self.process_node(inner_node,code)
+            inst.name = node.text.decode('ascii')
+            if inner_node.type == 'pointer_declarator':
+                ptrs += 'ptr'
+                inst.type = ptrs
 
-
+            
+            return inst
+            #print(inst)
     def handle_break_continue(self, node):
         """
         Handles `break` and `continue` statements.
@@ -251,8 +303,8 @@ class CParser:
 
     def handle_binary(self, node, code):
         # Check if the left and right children of the node are binary expressions
-        if node.children[0].type == 'binary_expression':
-            left_operand = self.handle_binary(node.children[0], code)
+        if not node.named_children[0].type  in literals and not node.named_children[0].type == 'identifier':
+            left_operand = self.process_node(node.children[0], code)
         else:
             # If the left child is not a binary expression, get its literal code
             left_operand = code[node.children[0].start_byte:node.children[0].end_byte]
@@ -261,8 +313,8 @@ class CParser:
         operation = code[node.children[1].start_byte:node.children[1].end_byte]
 
         # Check if the right child is a binary expression
-        if node.children[2].type == 'binary_expression':
-            right_operand = self.handle_binary(node.children[2], code)
+        if not node.named_children[1].type  in literals and not node.named_children[1].type == 'identifier':
+            right_operand = self.process_function(node.named_children[1], code)
         else:
             # If the right child is not a binary expression, get its literal code
             right_operand = code[node.children[2].start_byte:node.children[2].end_byte]
@@ -301,6 +353,35 @@ class CParser:
         # Create and return a Unary instruction
         return Unary(operation, operand, is_prefix)
 
+    def handle_init_declarator(self,node,code):
+        inner_node = node.named_children[0]
+        value = node.named_children[1]
+        if not value.type in literals:
+            value = self.process_node(value,code)
+        if inner_node.type == 'identifier':
+            var_name = inner_node.text.decode('ascii')
+            return (Variable(var_name, None, None, value))
+        else:
+            inst = self.process_node(inner_node,code)
+            if inst.type == 'array_declarator':
+                value = self.extract_initializer_list(inst)
+                inst.value = value
+            
+            return inst
+            #print(inst)
+            
+    def handle_array_declarator(self,node,code):
+        inner_node = node.named_children[0]
+        if inner_node.type == 'identifier':
+            size = []
+            size.append(node.named_children[1].text.decode('ascii'))
+            var_name = inner_node.text.decode('ascii')
+            return (Variable(var_name, None, size, None))
+        else:
+            inst = self.process_node(inner_node,code)
+            if inner_node.type == 'array_declarator': #multi dimensional arrays
+                inst.size.append(node.named_children[-1].text.decode('ascii'))       
+            return inst
     def handle_declaration(self, node, code):
         """
         Process a variable declaration in the syntax tree.
@@ -309,6 +390,35 @@ class CParser:
         declarations = []
         declaration_nodes = [child for child in node.children if child.type in {'identifier', 'init_declarator', 'array_declarator', 'pointer_declarator'}]
         
+        for declaration_node in declaration_nodes:
+            inst = self.process_node(declaration_node,code)
+            type_node = next((child for child in node.children if child.type in types), None)
+            if declaration_node.type == 'identifier':
+                var_name = inst
+                var_type = code[type_node.start_byte:type_node.end_byte]
+                var = Variable(var_name,var_type,None,None)
+                declarations.append(Declaration(var))
+            else:
+                if isinstance(inst.type,str):
+                    inst.type = code[type_node.start_byte:type_node.end_byte] + inst.type
+                else:
+                    inst.type = code[type_node.start_byte:type_node.end_byte]
+                if declaration_node.type == 'init_declarator':
+                    value = declaration_node.named_children[-1]
+                    value = self.process_node(value,code)
+                    if isinstance(value,Node):
+                        if value.type == 'initializer_list':
+                            value = self.extract_initializer_list(value,code)
+
+                        elif value.type in literals:
+                            value = self.extract_literal_value(value,code)
+                    inst.value = value
+                    
+                declarations.append(Declaration(inst))
+
+        return declarations
+
+
         for declaration_node in declaration_nodes:
             identifier = None
             initial_value = None
@@ -376,7 +486,10 @@ class CParser:
         """
         Extracts values from an initializer list for array declarations.
         """
-        init_list_node = next((child for child in declarator_node.children if child.type == 'initializer_list'), None)
+        if declarator_node.type == 'initializer_list':
+            init_list_node = declarator_node
+        else:
+            init_list_node = next((child for child in declarator_node.children if child.type == 'initializer_list'), None)
         if init_list_node:
             return init_list_node.text.decode()[1:-1]  # Remove braces from the initializer list
         return None
@@ -475,8 +588,32 @@ class CParser:
         # Left side (variable being assigned)
         variable_node = node.children[0]
         idx = None
+        rets = self.process_node(variable_node,code)
+        #print(rets)
+        if isinstance(rets,list):
+            var = rets[0]
+            subscripts = rets[1:]
+            # Assignment operator (e.g., '=', '+=', '*=')
+            operation = code[node.children[1].start_byte:node.children[1].end_byte]
+            value_node = node.named_children[-1]
+            value = self.process_node(value_node,code)
+            ass = Assignment(var,value,operation,subscripts)
+        else:
+            var = rets
+            operation = code[node.children[1].start_byte:node.children[1].end_byte]
+            value_node = node.named_children[-1]
+            value = self.process_node(value_node,code)
+            ass = Assignment(var,value,operation,None)
+        # Right side (expression being assigned)
+       
+        return ass
+
         if variable_node.type == 'subscript_expression':
-            variable = variable_node.named_children[0].text.decode('ascii')
+            variable = variable_node.named_children[0]
+            if variable.type == 'identifier':
+                variable = variable_node.named_children[0].text.decode('ascii')
+            else:
+                inst = self.process_node(variable,code)
             idx = self.process_node(variable_node.named_children[1],code)
         else:
             variable = code[variable_node.start_byte:variable_node.end_byte]
@@ -499,7 +636,20 @@ class CParser:
         # Create and return an Assignment instruction with the specified operation
         return Assignment(variable, value, operation,idx)
 
-
+    def handle_subscription_expression(self,node,code):
+        kid = node.named_children[0]
+        value = node.named_children[-1]
+        if value.type in literals:
+            value = self.extract_literal_value(value,code)
+        else:
+            value = self.process_node(value,code)
+        if kid.type == 'identifier':
+            
+            return [kid.text.decode('ascii'),value]
+        else:
+            inst = self.process_node(kid,code)
+            inst.append(value)
+            return inst
     
     # Function to parse if statements
     def handle_if_statement(self, node, code):
