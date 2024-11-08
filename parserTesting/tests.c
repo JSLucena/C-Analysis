@@ -10,9 +10,6 @@ void declarationsWithAssignment() {
     int a = 10;
     float b = 5.5;
     int arr[3] = {1, 2, 3};
-    int arr[3][3][3] = {1, 2, 3, 
-    4, 5, 6, 
-    7, 8, 9};
 }
 
 void basicForLoop() {

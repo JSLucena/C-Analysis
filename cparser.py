@@ -2,10 +2,7 @@ from tree_sitter import Language, Parser, Node
 import os
 import tree_sitter_c
 import warnings
-# Variable class
-target_function = 'allocate_memory'
-# Path to C file
-filename = 'simpleTB/mid6.c'
+
 
 
 types = ['primitive_type']
@@ -371,12 +368,12 @@ class CParser:
             # Prefix operation
             operation = code[node.children[0].start_byte:node.children[0].end_byte]
             operand_node = node.children[1]
-            is_prefix = False
+            is_prefix = True
         else:
             # Postfix operation
             operand_node = node.children[0]
             operation = code[node.children[1].start_byte:node.children[1].end_byte]
-            is_prefix = True
+            is_prefix = False
 
         # Recursively process the operand if it's an expression
         if operand_node.type == 'binary_expression':
@@ -388,7 +385,7 @@ class CParser:
             operand = code[operand_node.start_byte:operand_node.end_byte]
 
         # Create and return a Unary instruction
-        return Unary(operation, operand, is_prefix)
+        return Unary(operand, operation, is_prefix)
 
     def handle_init_declarator(self,node,code):
         inner_node = node.named_children[0]
@@ -715,16 +712,3 @@ def setup_tree_sitter():
 
 
 
-# Example usage
-if __name__ == "__main__":
-    
-    
-    with open(filename, 'r') as file:
-        c_code = file.read()
-    
-    # Initialize analyzer and parse code
-    parser = setup_tree_sitter()
-    parser = CParser(parser)
-    parser.build(c_code,target_function)
-    parser.print_args()
-    parser.print_instructions()
