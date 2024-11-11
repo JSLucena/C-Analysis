@@ -4,6 +4,8 @@ import re
 from enum import Enum
 from typing import Optional, List, Dict, Set
 from dataclasses import dataclass
+from z3 import *
+import networkx as nx
 def generate_and_analyze_ir(c_file_path, analysis_function, target_function):
     # Define the output path for the LLVM IR file
     ir_file_path = c_file_path.replace(".c", ".ll")
@@ -94,6 +96,7 @@ class Alloca(Instruction):
         super().__init__(f"alloca {var_name}", op_type)
         self.dest = var_name
 
+
 class SignExtend(Instruction):
     def __init__(self, dest, src, from_type, to_type):
         super().__init__(f"sext {src} from {from_type} to {to_type}")
@@ -148,6 +151,7 @@ class IRParser:
         self.current_block = BasicBlock(0)
         self.blocks[0] = self.current_block
         self.entry_block_initialized = True
+        self.cycles = None
 
         for line in lines:
             line = line.strip()
@@ -282,7 +286,7 @@ class IRParser:
             return Comparison(operation, dest, operand1, operand2, op_type)
 
         # Match Alloca instructions
-        alloca_match = re.match(r"(%\w+) = alloca (.+)", line)
+        alloca_match = re.match(r"(%\w+) = alloca (.+),", line)
         if alloca_match:
             var_name = alloca_match.group(1)
             op_type = alloca_match.group(2)
@@ -332,11 +336,16 @@ class DataFlowAnalysis:
         self.reaching_definitions = {block_id: set() for block_id in blocks}
         # To store constants propagated across blocks
         self.constants = {block_id: {} for block_id in blocks}
+        self.ranges = {block_id: {} for block_id in blocks}
+        self.array_accesses = {block_id: [] for block_id in blocks}
+        self.loop_bounds = {block_id: [] for block_id in blocks}
+        self.arrays_declarations = {}
+        self.cycles = None
 
     def reaching_definitions_analysis(self):
         # Initialize worklist with all blocks
         worklist = list(self.blocks.keys())
-        
+        worklist.sort()
         # Iterate until worklist is empty
         while worklist:
             block_id = worklist.pop(0)
@@ -394,7 +403,7 @@ class DataFlowAnalysis:
                     try:
                         val = int(instr.src)
                     except:
-                        val = instr.src
+                        return
                         #val = out_consts[val]
                     target = instr.dest
                     if val in out_consts:
@@ -408,6 +417,7 @@ class DataFlowAnalysis:
                 elif isinstance(instr, Branch) and instr.condition in out_consts:
                     # Replace branch condition if it's constant
                     instr.condition_value = out_consts[instr.condition]
+                """
                 elif isinstance(instr, MathOperation):
                     op1 = instr.operand1
                     op2 = instr.operand2
@@ -460,6 +470,7 @@ class DataFlowAnalysis:
                         out_consts[instr.dest] = out_consts[instr.src]
                     else:
                         out_consts[instr.dest] = instr.src
+                """
 
 
 
@@ -470,6 +481,144 @@ class DataFlowAnalysis:
                 worklist.extend(block.successors)
 
 
+    def get_array_declarations(self):
+        worklist = list(self.blocks.keys())
+        for block_id in worklist:
+            block = self.blocks[block_id]
+            for instr in block.instructions:
+                if isinstance(instr,Alloca):
+                    var = instr.dest
+                    match = re.match(r"\[(\d+) x (\w+)\]", instr.op_type)
+                    if match:
+                        size = int(match.group(1))
+                        type_ = match.group(2)
+                        self.arrays_declarations[var] = [size,type_]
+
+    def get_array_assignments(self):
+        worklist = list(self.blocks.keys())
+        for block_id in worklist:
+            block = self.blocks[block_id]
+            for instr in block.instructions:
+                if isinstance(instr, GetElementPtr) and instr.base_ptr in self.arrays_declarations:
+                     # Assume indices[1] is the index of the element being accessed
+                    index = instr.indices[1]
+                    if block_id not in self.array_accesses:
+                        self.array_accesses[block_id] = []
+                    self.array_accesses[block_id].append([instr.base_ptr, index])
+
+    def get_array_index(self):
+        for block_id, block in self.blocks.items():
+            for instr in block.instructions:
+                if isinstance(instr, GetElementPtr):
+                    ret =self.find_origin(block_id,instr.indices[-1])
+                    for index, arr in enumerate(self.array_accesses[block_id]):
+                        if arr[0] == instr.base_ptr:
+                            self.array_accesses[block_id][index][1] = ret
+
+    def get_loop_bound(self):
+        for block_id, block in self.blocks.items():
+            for instr in block.instructions:
+                if isinstance(instr, Branch) and instr.condition != None:
+                    ret =self.find_origin(block_id,instr.condition)
+                    cond = self.find_comparison(block_id,instr.condition)
+                    true = self.analyze_condition(block_id,cond,True,ret)
+                    false = self.analyze_condition(block_id,cond,False,ret)
+                    trueblock = int(instr.true_block)
+                    falseblock = int(instr.false_block)
+                    self.ranges[trueblock][ret] = true
+                    self.ranges[falseblock][ret] = false
+
+                    
+
+    def analyze_condition(self,block_id,cond,bool,var):
+        #operation = cond.operation
+        #dest = cond.dest
+        #operand1 =cond.operand1
+        operand2 = cond.operand2
+        op_type = cond.op_type
+        try:
+            operand2 = int(operand2)
+        except:
+            print("fuck")
+        init_val = self.constants[block_id][var]
+        if op_type == 'slt':
+            return [init_val,operand2-1] if bool else [operand2,operand2]
+    
+
+    def find_comparison(self,block_id,var_name):
+        block = self.blocks[block_id]
+        for instr in reversed(block.instructions):
+            if isinstance(instr,Comparison) and var_name == instr.dest:
+                return instr
+
+    def analyze_array_access(self):
+        for block_id, accesses in self.array_accesses.items():
+            for acc in accesses:
+                array = self.arrays_declarations[acc[0]]
+                values = self.ranges[block_id][acc[1]]
+                if values[0] < 0 or values[1] > array[0]:
+                    return "stack overflow"
+                else:
+                    return "ok"
+
+    def find_origin(self, block_id, var_name):
+        block = self.blocks[block_id]
+        for instr in reversed(block.instructions):
+            if hasattr(instr, "dest") and instr.dest == var_name:
+                if isinstance(instr, Load):
+                    # If the variable is loaded from a memory location, trace back the source
+                    return self.find_origin(block_id, instr.src)
+                elif isinstance(instr, SignExtend):
+                    # If the variable is a sign-extended value, trace back the original source
+                    return self.find_origin(block_id, instr.src)
+                elif isinstance(instr, MathOperation) or isinstance(instr,Comparison):
+                    # If the variable is the result of a math operation, trace back the operands
+                    op1 = instr.operand1
+                    op2 = instr.operand2
+                    #if op1 in self.constants[block_id]:
+                        # If the first operand is a constant, use the constant value
+                    #    return self.constants[block_id][op1]
+                    #else:
+                        # If the first operand is a variable, trace back its origin
+                    return self.find_origin(block_id, op1)
+                elif isinstance(instr, Alloca):
+                    # If the variable is an alloca'd value, return the variable name
+                    return var_name
+                else:
+                    # For other instructions, return the variable name
+                    return var_name
+
+        # If the variable is not found in the current block, check the predecessors
+        for pred in self.blocks[block_id].predecessors:
+            origin = self.find_origin(pred, var_name)
+            if origin is not None:
+                return origin
+
+        return None
+
+    def detect_cycles(self):
+        # Create a directed graph
+        G = nx.DiGraph()
+
+        # Add nodes and edges based on the block successors
+        for label, block in self.blocks.items():
+            G.add_node(label)
+            for successor in block.successors:
+                G.add_edge(label, successor)
+
+        # Detect cycles
+        
+        try:
+            cycles = list(nx.find_cycle(G, orientation='original'))
+            cycle = []
+            for c in cycles:
+                cycle.append(c[0])
+            self.cycles = cycle
+        except nx.NetworkXNoCycle:
+            print("No cycles found.")
+
+    
+
     def display_results(self):
         print("Reaching Definitions Analysis Results:")
         for block_id, defs in self.reaching_definitions.items():
@@ -478,6 +627,19 @@ class DataFlowAnalysis:
         print("\nConstant Propagation Analysis Results:")
         for block_id, consts in self.constants.items():
             print(f"Block {block_id}: {consts}")
+        
+        print("\nArray declarations found:")
+        for name, data  in self.arrays_declarations.items():
+            print(f"array {name}, size {data[0]}, type {data[1]}")
+
+        print("\nArray acesses found:")
+        for block, arrays  in self.array_accesses.items():
+            for array in arrays:
+                print(f"Block {block}, array {array[0]}, index {array[1]}")
+
+        print("Cycles detected:", self.cycles)
+        for block_id, ranges in self.ranges.items():
+            print(f"Analyzed ranges {block_id}: {ranges}")
 
 # Usage
 c_file = "simpleTB/simple1.c"
@@ -503,5 +665,23 @@ dfa.reaching_definitions_analysis()
 # Run Constant Propagation Analysis
 dfa.constant_propagation_analysis()
 
+
+dfa.get_array_declarations()
+dfa.get_array_assignments()
+dfa.detect_cycles()
+dfa.get_array_index()
+dfa.get_loop_bound()
+ret = dfa.analyze_array_access()
 # Display results
 dfa.display_results()
+
+print(ret)
+
+#errors = dfa.check_oob_with_z3()
+
+#if errors:
+#    print("Out-of-bounds errors detected:")
+#    for error in errors:
+#        print(f"Block ID: {error[0]}, Array: {error[1]}, Index Variable: {error[2]}")
+#else:
+#    print("No out-of-bounds errors detected.")
