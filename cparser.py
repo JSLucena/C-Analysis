@@ -146,29 +146,69 @@ class CParser:
         self.parser = parser
         self.variables = {}  # Dictionary of variables
         self.instructions = []  # List of ordered instructions
+        
 
     def build(self, code, function_name):
         tree = self.parser.parse(bytes(code, "utf8"))
         
         self.process_function(tree.root_node, code, function_name)
 
-
+    """
     def process_function(self,node,code, function_name):
         if node.type == "function_definition":
 
             declarator = node.children[1]
             name = declarator.children[0].text.decode('ascii')
+            print(f"Found function: {name}")  # print the function name
             if name == function_name:
                 self.function_name = name
                 self.return_type = node.children[0].text.decode('ascii')
                 body = node.children[2]
                 self.parameters = self.parse_parameters(declarator, code)
+                print(f"Parsed parameters: {self.parameters}")  #print the parameters
                 self.process_nodes(body,code)
             
                 
         else:  
             for child in node.children:
                 self.process_function(child,code, function_name)
+                """
+    def process_function(self, node, code, function_name):
+    
+     if node.type == "function_definition":
+        declarator = node.children[1]  
+        name_node = self.find_identifier(declarator)
+        if name_node:
+            name = name_node.text.decode('ascii')  
+            print(f"Found function: {name}")  
+
+            if name == function_name:
+                # match the target function
+                print(f"Processing target function: {name}")
+                self.function_name = name
+                self.return_type = node.children[0].text.decode('ascii')  
+                body = node.children[2]  
+                self.parameters = self.parse_parameters(declarator, code)
+                
+                self.process_nodes(body, code)
+        else:
+            print("No valid function name found.")  
+     else:
+        
+        for child in node.children:
+            self.process_function(child, code, function_name)
+
+    def find_identifier(self, node):
+      if node.type == "identifier":
+        return node
+      for child in node.children:
+        result = self.find_identifier(child)
+        if result:
+            return result
+      return None
+    
+    
+  
 
 
     def parse_parameters(self, node, code):
@@ -195,8 +235,10 @@ class CParser:
                         # Create a Variable instance for each parameter
                         parameter = Variable(param_name, param_type)
                         parameters.append(parameter)
+        
                         
         return parameters
+    
 
 
     def process_nodes(self, node, code):

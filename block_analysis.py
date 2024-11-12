@@ -5,9 +5,9 @@ import tree_sitter_c
 import warnings
 
 # Variable class
-target_function = 'stackOverflow'
+target_function = 'incorrectLength'
 # Path to C file
-filename = 'simpleTB/simple1.c'
+filename = 'simpleTB/simple12.c'
 
 class BasicBlock:
     def __init__(self, block_id):
@@ -160,7 +160,41 @@ class ArrayBoundsAnalysis:
             var_name = instruction.variable.name
             var_size = instruction.variable.size
             val = None
-            if var_size:  # This is an array
+
+             # Check if the value is a Cast
+            if isinstance(instruction.variable.value, Cast):
+                 print(f"Skipping cast value for variable: {var_name}")
+                 val = None  # Skip further processing for Cast objects
+            elif isinstance(instruction.variable.value, (int, float)):
+            # Directly use numeric values
+                 val = instruction.variable.value
+            elif isinstance(instruction.variable.value, str):
+            # Try to parse string values to int, if possible
+                try:
+                   val = int(instruction.variable.value)
+                except ValueError:
+                   val = instruction.variable.value  # Fallback to raw string value
+            else:
+            # For any other type (e.g., FunctionCall, Binary, etc.), just store as is
+                val = instruction.variable.value
+            
+
+            if var_size:  # If this is an array
+
+              try:
+                size = int(var_size[0])  # Convert size to integer
+                self.array_bounds[var_name] = (0, size - 1)
+              except (ValueError, TypeError):
+                # Handle non-constant sizes or invalid sizes
+                self.array_bounds[var_name] = ('dynamic', var_size[0])
+            else:
+            # Handle non-array variables
+             if instruction.variable.type == 'int':
+                if isinstance(val, (int, float)):
+                    val = [val, val]  # Store the value as a range [min, max]
+                
+
+            """if var_size:  # This is an array
                 # Convert size to integer if it's a constant
                 try:
                     size = int(var_size[0])
@@ -172,7 +206,8 @@ class ArrayBoundsAnalysis:
                 
                 if instruction.variable.type == 'int':
                     val = int(instruction.variable.value)
-                    val = [val,val]
+                    val = [val,val]   """
+            # Store the variable in the variables dictionary
             self.variables[var_name] = [instruction.variable.type,val]
 
     def analyze_assignment(self, block_id, instruction):
