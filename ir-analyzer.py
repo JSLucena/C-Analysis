@@ -29,21 +29,39 @@ def generate_and_analyze_ir(c_file_path, analysis_function, target_function):
         return code
 
 def analyze_ir(ir_file_path, target_function):
-    with open(ir_file_path, 'r') as f:
-        ir_content = f.read()
+  """
+  Analyzes the IR file and returns the IR for each occurrence of the target function.
 
-        # Updated regex pattern to capture only the target function's IR
-        pattern = rf"define.*@{re.escape(target_function)}\(.*?{{\n.*?}}"
-        match = re.search(pattern, ir_content, re.DOTALL)
+  Args:
+      ir_file_path: Path to the IR file.
+      target_function: Name of the function to analyze.
 
-        if match:
-            function_ir = match.group(0)
-            print(f"Function '{target_function}' IR:")
-            #print(function_ir)
-            
-        else:
-            print(f"Function '{target_function}' not found in IR.")
-    return function_ir
+  Returns:
+      A dictionary where keys are function names (if multiple matches) and values are the corresponding IR strings.
+  """
+  with open(ir_file_path, 'r') as f:
+    ir_content = f.read()
+
+  # Use re.finditer for all matches
+  pattern = r"define dso_local (\S*) @([a-zA-Z0-9_]+)\((.*?)\) #0 \{([\s\S]*?)\}"
+  matches = re.finditer(pattern, ir_content, re.DOTALL)
+
+  function_data = {}  # Dictionary to store results
+
+  for match in matches:
+    if match.group(2) == target_function:  # Check if function name matches target
+      function_name = match.group(2)
+      function_params = match.group(3)
+      function_ir = match.group(4)
+      function_data[function_name] = function_ir
+      print(f"Function '{target_function}' (Occurrence):")
+      print(f"  Parameters: {function_params}")
+      print(f"  IR:\n{function_ir}\n")
+
+  if not function_data:
+    print(f"Function '{target_function}' not found in IR.")
+
+  return function_data
        
 # Define instruction classes for common LLVM IR instructions
 
@@ -122,6 +140,23 @@ class Return(Instruction):
         self.ret_type = ret_type
         self.ret_value = ret_value
 
+class CallInstruction:
+    def __init__(self, dest, func_name, func_type, args):
+        self.dest = dest
+        self.func_name = func_name
+        self.func_type = func_type
+        self.args = args
+
+    def __repr__(self):
+        return f"CallInstruction(dest={self.dest}, func_name={self.func_name}, func_type={self.func_type}, args={self.args})"
+
+class Bitcast(Instruction):
+    def __init__(self, dest, source_type, target_type):
+        super().__init__(f"bitcast {source_type} to {target_type}", target_type)
+        self.dest = dest
+        self.source_type = source_type
+        self.target_type = target_type
+
 
 class BasicBlock:
     def __init__(self, label):
@@ -188,6 +223,7 @@ class IRParser:
                 continue
 
             # Parse instruction lines and add to the current block
+            #print(line)
             instruction = self.parse_instruction(line)
             if instruction:
                 self.current_block.add_instruction(instruction)
@@ -195,7 +231,52 @@ class IRParser:
         return self.blocks
 
     def parse_instruction(self, line):
-        # Match Load instructions
+        match = re.match(r"(%\d+) = bitcast (.*) (%.*) to (.*)", line)
+
+        if match:
+            dest_reg = match.group(1)
+            source_type = match.group(3)
+            target_type = match.group(4)
+
+            return Bitcast(dest_reg, source_type, target_type)
+
+
+        match = re.match(r"(%\d+) =\s+srem\s+(.*)\s+(%\d+),\s+(\d+)", line)
+        if match:
+            dest = match.group(1)
+            operation = "srem"
+            op_type = match.group(2)
+            operand1 = match.group(3)
+            operand2 = match.group(4)
+            return MathOperation(operation, dest, operand1, operand2, op_type)
+        
+        match = re.match(r"(%\d+) =\s+srem\s+(.*)\s+(\d+),\s+(\d+)", line)
+        if match:
+            dest = match.group(1)
+            operation = "srem"
+            op_type = match.group(2)
+            operand1 = match.group(3)
+            operand2 = match.group(4)
+            return MathOperation(operation, dest, operand1, operand2, op_type)
+        
+        match = re.match(r"(%\d+) =\s+srem\s+(.*)\s+(%\d+),\s+(%\d+)", line)
+        if match:
+            dest = match.group(1)
+            operation = "srem"
+            op_type = match.group(2)
+            operand1 = match.group(3)
+            operand2 = match.group(4)
+            return MathOperation(operation, dest, operand1, operand2, op_type)
+        
+        match = re.match(r"(%\d+) =\s+srem\s+(.*)\s+(\d+),\s+(%\d+)", line)
+        if match:
+            dest = match.group(1)
+            operation = "srem"
+            op_type = match.group(2)
+            operand1 = match.group(3)
+            operand2 = match.group(4)
+            return MathOperation(operation, dest, operand1, operand2, op_type)
+
         load_match = re.match(r"(%\w+) = load (.+), (.+) (%\w+)", line)
         if load_match:
             dest = load_match.group(1)
@@ -322,6 +403,48 @@ class IRParser:
             ret_value = ret_match.group(2)
             return Return(ret_type, ret_value)
 
+        call_match = re.match(r"(?:(%\w+) = )?call (\S+) (\S+)\((.*)\)",line)
+        if call_match:
+            dest = call_match.group(1)  # Destination register (if any)
+            func_type = call_match.group(2)  # Function type (e.g., void, i8*)
+            func_name = call_match.group(3)  # Function name (e.g., @malloc)
+            args_str = call_match.group(4)  # Argument list as a string
+
+            # Split the argument string and capture type and name for each argument
+            args = []
+            for arg in args_str.split(", "):
+                if "getelementptr inbounds" in arg:
+                    gep_match = re.match(r"(.+?) (.*) \((.*)", arg)
+                    arg_type = arg_match.group(1)
+                    arg_value = arg_match.group(2)
+                    args.append((arg_type,arg_value))
+                arg_match = re.match(r"(\S+) (%?\w+) (%?\w+)", arg)
+                if arg_match:
+                    arg_type = arg_match.group(1)
+                    arg_value = arg_match.group(3)
+                    args.append((arg_type, arg_value))
+
+            return CallInstruction(dest, func_name, func_type, args)
+        
+        call_match = re.match(r"(?:(%\w+) = )?call noalias (\S+) (\S+)\((.*)\)",line)
+        if call_match:
+            dest = call_match.group(1)  # Destination register (if any)
+            func_type = call_match.group(2)  # Function type (e.g., void, i8*)
+            func_name = call_match.group(3)  # Function name (e.g., @malloc)
+            args_str = call_match.group(4)  # Argument list as a string
+
+            # Split the argument string and capture type and name for each argument
+            args = []
+            for arg in args_str.split(", "):
+                arg_match = re.match(r"(\S+) (%?\w+) (%?\w+)", arg)
+                if arg_match:
+                    arg_type = arg_match.group(1)
+                    arg_data = arg_match.group(2)
+                    arg_value = arg_match.group(3)
+                    args.append((arg_type, arg_value))
+
+            return CallInstruction(dest, func_name, func_type, args)
+        
         # Return None if no matching instruction is found
         return None
 # Example usage
@@ -341,6 +464,7 @@ class DataFlowAnalysis:
         self.loop_bounds = {block_id: [] for block_id in blocks}
         self.arrays_declarations = {}
         self.cycles = None
+        self.pointers = {block_id: {} for block_id in blocks}
 
     def reaching_definitions_analysis(self):
         # Initialize worklist with all blocks
@@ -540,9 +664,13 @@ class DataFlowAnalysis:
             operand2 = int(operand2)
         except:
             print("fuck")
-        init_val = self.constants[block_id][var]
+        init_val = self.constants[block_id][var] #TODO change this to check first if we have condition ranges for block
         if op_type == 'slt':
             return [init_val,operand2-1] if bool else [operand2,operand2]
+        elif op_type == 'sle':
+            return [init_val,operand2] if bool else [operand2+1,operand2+1]
+        else:
+            print("FUDEU ANALYZE CONDITION")
     
 
     def find_comparison(self,block_id,var_name):
@@ -611,13 +739,32 @@ class DataFlowAnalysis:
         try:
             cycles = list(nx.find_cycle(G, orientation='original'))
             cycle = []
+            print(cycles)
             for c in cycles:
                 cycle.append(c[0])
             self.cycles = cycle
         except nx.NetworkXNoCycle:
             print("No cycles found.")
 
-    
+    def get_pointers(self):
+        for block_id, block in self.blocks.items():
+            for instr in block.instructions:
+                if isinstance(instr, Alloca):
+                    if "*" in instr.op_type:
+                        self.pointers[block_id][instr.dest] = [instr.op_type,-1,0] #-1 represents size if malloced, 0 is value
+
+    def get_mallocs(self):
+        for block_id, pointers in self.pointers.items():
+            for name, data in pointers.items():
+                for thing in self.reaching_definitions[block_id]:
+                    if thing[0] == name:
+                        ptr_expr = thing[1]
+                        origin = ptr_expr.src
+                        origin = self.find_origin(block_id,origin)
+                        origin_expr = self.reaching_definitions[block_id]
+
+
+
 
     def display_results(self):
         print("Reaching Definitions Analysis Results:")
@@ -642,9 +789,10 @@ class DataFlowAnalysis:
             print(f"Analyzed ranges {block_id}: {ranges}")
 
 # Usage
-c_file = "simpleTB/simple1.c"
-code = generate_and_analyze_ir(c_file, analyze_ir, target_function="stackOverflow")
-parser = IRParser(code)
+c_file = "parserTesting/tests.c"
+target_function ="complexLoop"
+code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
+parser = IRParser(code[target_function])
 blocks = parser.parse()
 
 
@@ -671,6 +819,8 @@ dfa.get_array_assignments()
 dfa.detect_cycles()
 dfa.get_array_index()
 dfa.get_loop_bound()
+dfa.get_pointers()
+dfa.get_mallocs()
 ret = dfa.analyze_array_access()
 # Display results
 dfa.display_results()
