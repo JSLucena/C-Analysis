@@ -304,18 +304,26 @@ class ArrayBoundsAnalysis:
                     return left[1][1] < right
         return ('unknown', 'unknown')
 
+
     def analyze_binary(self, block_id, instruction):
         if isinstance(instruction, Binary):
             if instruction.operation in ['>', '>=', '==', '<=', '<', '!=']:
-                #left_value = self.evaluate_expression(instruction.left)
-                #right_value = self.evaluate_expression(instruction.right)
+                left_value = self.evaluate_expression(instruction.left)
+                right_value = self.evaluate_expression(instruction.right)
 
                 # If the block has multiple successors, update their conditions
                 if len(self.cfg[block_id]['successors']) > 1:
                     true_successor, false_successor = self.cfg[block_id]['successors']
 
                     # Update the condition for the true successor
-                    self.block_conditions[true_successor] = instruction  # Or a more specific representation
+                    true_range = None
+                    if isinstance(left_value,list):
+                        true_range = left_value[1]
+                        true_range[1] += right_value
+                    if isinstance(right_value,list):
+                        true_range = right_value[1]
+                        true_range[1] += left_value
+                    self.block_conditions[true_successor] = [instruction,true_range]  # Or a more specific representation
 
                     # Update the condition for the false successor
                     negated_condition = self.negate_condition(instruction)
