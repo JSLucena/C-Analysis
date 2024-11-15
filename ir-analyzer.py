@@ -465,6 +465,8 @@ class DataFlowAnalysis:
         self.arrays_declarations = {}
         self.cycles = None
         self.pointers = {block_id: {} for block_id in blocks}
+        self.available_expressions = {block_id: set() for block_id in blocks}
+        self.live_variables = {block_id: set() for block_id in blocks}
 
     def reaching_definitions_analysis(self):
         # Initialize worklist with all blocks
@@ -487,15 +489,6 @@ class DataFlowAnalysis:
                     dst = instr.dest
                     out_defs = {d for d in out_defs if d[0] != dst}
                     out_defs.add((dst,instr))
-                """
-                if isinstance(instr, (Alloca, Store, Load)):  # For example
-                    # Define the target variable, assume it's instr.target
-                    target = instr.target
-                    # Remove old definitions of the target
-                    out_defs = {d for d in out_defs if d[0] != target}
-                    # Add the new definition
-                    out_defs.add((target, instr))
-                """
             # Update block's reaching definitions
             if out_defs != self.reaching_definitions[block_id]:
                 self.reaching_definitions[block_id] = out_defs
@@ -534,6 +527,7 @@ class DataFlowAnalysis:
                         out_consts[target] = out_consts[val]
                     else:
                         out_consts[target] = val
+                
                 elif isinstance(instr, Load):
                     # For a load, replace with constant if it exists
                     if instr.src in out_consts:
@@ -541,7 +535,6 @@ class DataFlowAnalysis:
                 elif isinstance(instr, Branch) and instr.condition in out_consts:
                     # Replace branch condition if it's constant
                     instr.condition_value = out_consts[instr.condition]
-                """
                 elif isinstance(instr, MathOperation):
                     op1 = instr.operand1
                     op2 = instr.operand2
@@ -549,15 +542,11 @@ class DataFlowAnalysis:
                     try:
                         op1 = int(op1)
                     except ValueError:
-                        pass
+                        return
                     try:
                         op2 = int(op2)
                     except ValueError:
-                        pass
-                    if op1 in out_consts:
-                        op1 = out_consts[op1]
-                    if op2 in out_consts:
-                        op2 = out_consts[op2]
+                        return
                     if op == 'add':
                         out_consts[instr.dest] = op1 + op2
                     else:
@@ -570,18 +559,12 @@ class DataFlowAnalysis:
                     try:
                         op1 = int(op1)
                     except ValueError:
-                        pass
+                        return
 
                     try:
                         op2 = int(op2)
                     except ValueError:
-                        pass
-
-                    if op1 in out_consts:
-                        op1 = out_consts[op1]
-                    if op2 in out_consts:
-                        op2 = out_consts[op2]
-
+                        return
                     if isinstance(op1, int) and isinstance(op2, int):
                         if op == 'slt':
                             out_consts[instr.dest] = op1 < op2
@@ -592,16 +575,93 @@ class DataFlowAnalysis:
                 elif isinstance(instr,SignExtend):
                     if instr.src in out_consts:
                         out_consts[instr.dest] = out_consts[instr.src]
-                    else:
-                        out_consts[instr.dest] = instr.src
-                """
-
-
-
             # Update the block's constants
             if out_consts != self.constants[block_id]:
                 self.constants[block_id] = out_consts
                 # Add successors to the worklist if constants changed
+                worklist.extend(block.successors)
+    def live_variables_analysis(self):
+        # Initialize worklist with all blocks
+        worklist = list(self.blocks.keys())
+        worklist.sort(reverse=True)  # Process in reverse order for backward analysis
+        
+        # Iterate until worklist is empty
+        while worklist:
+            block_id = worklist.pop(0)
+            block = self.blocks[block_id]
+            
+            # Start with the live variables at the block's exit (out set)
+            out_live = set()
+            for succ in block.successors:
+                out_live.update(self.live_variables[succ])
+            
+            # Compute in set for the current block
+            in_live = out_live.copy()
+            for instr in reversed(block.instructions):
+                if isinstance(instr,Store) or isinstance(instr,SignExtend):
+                    # Kill variable being defined
+                    if instr.dest in in_live:
+                        in_live.remove(instr.dest)
+                    # Add variables used
+                    in_live.update(instr.src if isinstance(instr.src, list) else [instr.src])
+                elif isinstance(instr, MathOperation) or isinstance(instr,Comparison):
+                    if instr.dest in in_live:
+                        in_live.remove(instr.dest)
+                    in_live.add(instr.operand1)
+                    in_live.add(instr.operand2)
+                elif isinstance(instr,GetElementPtr):
+                    if instr.dest in in_live:
+                        in_live.remove(instr.dest)
+                    in_live.add(instr.base_ptr)
+                    in_live.add(instr.indices[-1])
+                elif isinstance(instr, Load):
+                    # Variables used in a load are live
+                    in_live.add(instr.src)
+                elif isinstance(instr, Branch):
+                    # Condition variable is used
+                    in_live.add(instr.condition)
+
+            # Update live variables for this block
+            if in_live != self.live_variables[block_id]:
+                self.live_variables[block_id] = in_live
+                # Add predecessors to the worklist if live variables changed
+                worklist.extend(block.predecessors)
+    def available_expressions_analysis(self):
+        # Initialize worklist with all blocks
+        worklist = list(self.blocks.keys())
+        worklist.sort()
+        
+        # Iterate until worklist is empty
+        while worklist:
+            block_id = worklist.pop(0)
+            block = self.blocks[block_id]
+            
+            # Gather available expressions from predecessors (in set)
+            in_avail = set()
+            for pred in block.predecessors:
+                in_avail &= self.available_expressions[pred] if in_avail else self.available_expressions[pred]
+            
+            # Compute out set for the current block
+            out_avail = in_avail.copy()
+            for instr in block.instructions:
+                if isinstance(instr,Store):
+                    # Kill expressions involving the modified variable
+                    out_avail = {expr for expr in out_avail if instr.dest not in expr}
+                elif isinstance(instr, MathOperation) or isinstance(instr,Comparison):
+                    # Add new expressions formed by binary operations
+                    out_avail = {expr for expr in out_avail if instr.dest not in expr}
+                    out_avail.add((instr.operation, instr.operand1, instr.operand2))
+                elif isinstance(instr,SignExtend):
+                    out_avail = {expr for expr in out_avail if instr.dest not in expr}
+                    out_avail.add(('sext',instr.src))
+                elif isinstance(instr,GetElementPtr):
+                    out_avail = {expr for expr in out_avail if instr.dest not in expr}
+                    out_avail.add(('getelemptr',instr.base_ptr, instr.indices[-1]))
+            
+            # Update available expressions for this block
+            if out_avail != self.available_expressions[block_id]:
+                self.available_expressions[block_id] = out_avail
+                # Add successors to the worklist if available expressions changed
                 worklist.extend(block.successors)
 
 
@@ -664,7 +724,10 @@ class DataFlowAnalysis:
             operand2 = int(operand2)
         except:
             print("fuck")
-        init_val = self.constants[block_id][var] #TODO change this to check first if we have condition ranges for block
+
+        for block_id, block in self.blocks.items():
+            if var in self.constants[block_id]:
+                init_val = self.constants[block_id][var]
         if op_type == 'slt':
             return [init_val,operand2-1] if bool else [operand2,operand2]
         elif op_type == 'sle':
@@ -776,21 +839,29 @@ class DataFlowAnalysis:
             print(f"Block {block_id}: {consts}")
         
         print("\nArray declarations found:")
-        for name, data  in self.arrays_declarations.items():
-            print(f"array {name}, size {data[0]}, type {data[1]}")
-
-        print("\nArray acesses found:")
-        for block, arrays  in self.array_accesses.items():
+        for name, data in self.arrays_declarations.items():
+            print(f"Array {name}, size {data[0]}, type {data[1]}")
+        
+        print("\nArray accesses found:")
+        for block, arrays in self.array_accesses.items():
             for array in arrays:
                 print(f"Block {block}, array {array[0]}, index {array[1]}")
-
-        print("Cycles detected:", self.cycles)
+        
+        print("\nLive Variables Analysis Results:")
+        for block_id, vars in self.live_variables.items():
+            print(f"Block {block_id}: {vars}")
+        
+        print("\nAvailable Expressions Analysis Results:")
+        for block_id, exprs in self.available_expressions.items():
+            print(f"Block {block_id}: {exprs}")
+        
+        print("\nCycles detected:", self.cycles)
         for block_id, ranges in self.ranges.items():
-            print(f"Analyzed ranges {block_id}: {ranges}")
+            print(f"Analyzed ranges for Block {block_id}: {ranges}")
 
 # Usage
-c_file = "parserTesting/tests.c"
-target_function ="complexLoop"
+c_file = "simpleTB/simple1.c"
+target_function ="stackOverflow"
 code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
 parser = IRParser(code[target_function])
 blocks = parser.parse()
@@ -813,6 +884,8 @@ dfa.reaching_definitions_analysis()
 # Run Constant Propagation Analysis
 dfa.constant_propagation_analysis()
 
+dfa.live_variables_analysis()
+dfa.available_expressions_analysis()
 
 dfa.get_array_declarations()
 dfa.get_array_assignments()
