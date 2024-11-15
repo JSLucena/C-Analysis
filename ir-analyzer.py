@@ -351,16 +351,26 @@ class IRParser:
         cmp_match = re.match(r"(%\w+) = (icmp|fcmp) .+? (.+?) (%\w+), (%\w+)", line)
         if cmp_match:
             dest = cmp_match.group(1)
-            operation = cmp_match.group(2)
-            op_type = cmp_match.group(3)
+            operation = cmp_match.group(3)
+            op_type = cmp_match.group(2)
             operand1 = cmp_match.group(4)
             operand2 = cmp_match.group(5)
             return Comparison(operation, dest, operand1, operand2, op_type)
         cmp_match = re.match(r"(%\w+) = (icmp|fcmp) (.+?) (.+?) (%\w+), (\w+)", line)
         if cmp_match:
             dest = cmp_match.group(1)
-            operation = cmp_match.group(2)
-            op_type = cmp_match.group(3)
+            operation = cmp_match.group(3)
+            op_type = cmp_match.group(2)
+            src_type = cmp_match.group(4)
+            operand1 = cmp_match.group(5)
+            operand2 = cmp_match.group(6)
+            return Comparison(operation, dest, operand1, operand2, op_type)
+        
+        cmp_match = re.match(r"(%\w+) = (icmp|fcmp) (.+?) (.+?) (\w+), (\w+)", line)
+        if cmp_match:
+            dest = cmp_match.group(1)
+            operation = cmp_match.group(3)
+            op_type = cmp_match.group(2)
             src_type = cmp_match.group(4)
             operand1 = cmp_match.group(5)
             operand2 = cmp_match.group(6)
@@ -859,6 +869,194 @@ class DataFlowAnalysis:
         for block_id, ranges in self.ranges.items():
             print(f"Analyzed ranges for Block {block_id}: {ranges}")
 
+
+
+class AbstractInterpreter:
+    def __init__(self, blocks):
+        self.blocks = blocks
+        self.ranges = {}  # Store variable ranges as {var_name: [min, max]}
+
+    def interpret(self):
+        current_block_id = 0
+        while True:
+            current_block = self.blocks[current_block_id]
+            print(f"Interpreting Block {current_block_id}...")
+
+            for instr in current_block.instructions:
+                if isinstance(instr, Alloca):
+                    # Regular expression to match the pattern
+                    pattern = r"\[(\d+)\s+x\s+(\w+)\]"
+
+                    # Match the string
+                    match = re.match(pattern, instr.op_type)
+                    if match:
+                        size = match.group(1)
+                        type_ = match.group(2)
+                        vals = []
+                        for i in range(int(size)):
+                            vals.append([None,None])
+                        self.ranges[instr.dest] = {"type": type_, "value" : vals}
+                    else:
+                        self.ranges[instr.dest] = {"type": instr.op_type, "value" : [None,None]}
+                    # Initialize allocated variable with [0, 0]
+                    
+                    print(f"Alloca: {instr.dest}")
+                elif isinstance(instr, Store):
+                    # Update the range of the destination with the source range or constant
+                    try:
+                        src = int(instr.src)
+                    except:
+                        src = instr.src
+                    if self.ranges[instr.dest]["type"] != "ptr":
+                        if isinstance(src, int):
+                            self.ranges[instr.dest]["value"] = [src, src]
+                        elif src in self.ranges:
+                            self.ranges[instr.dest] = self.ranges[src]
+                        print(f"Store: {instr.dest} = {self.ranges[instr.dest]}")
+                    else:
+                        pointee = self.ranges[instr.dest]["pointee"]
+                        index = self.ranges[instr.dest]["value"]
+                        for i in range(index[0], index[1]):
+                            self.ranges[pointee]["value"][i] = [src,src]
+                        print(f"Store: {pointee} = {self.ranges[pointee]}")
+                elif isinstance(instr, Load):
+                    # Load the range of the source into the destination
+                    if instr.src in self.ranges:
+                        self.ranges[instr.dest] = self.ranges[instr.src]
+                        print(f"Load: {instr.dest} = {self.ranges[instr.src]}")
+                    else:
+                        raise ValueError(f"Undefined variable {instr.src}")
+                elif isinstance(instr, MathOperation):
+                    try:
+                        op1 = int(instr.operand1)
+                        op1_range = [op1, op1]
+                    except:
+                        op1_range = self.ranges.get(instr.operand1, [0, 0])
+                        op1_range = op1_range["value"]
+                    try:
+                        op2 = int(instr.operand2)
+                        op2_range = [op2, op2]
+                    except:
+                        op2_range = self.ranges.get(instr.operand2, [0, 0])
+                        op2_range = op2_range["value"]
+                    res = None
+                    if instr.operation == "add":
+                        res = [
+                            min( op1_range[0], op2_range[0], op1_range[0]  + op2_range[0]),
+                            max(op1_range[1], op2_range[1], op1_range[1] + op2_range[1])
+                        ]
+                    elif instr.operation == "sub":
+                        res = [
+                            min( op1_range[0], op2_range[0], op1_range[0]  - op2_range[0]),
+                            max(op1_range[1], op2_range[1], op1_range[1] - op2_range[1])
+                        ]
+                    elif instr.operation == "mul":
+                        res = [
+                            min(
+                                op1_range[0] * op2_range[0],
+                                op1_range[0] * op2_range[1],
+                                op1_range[1] * op2_range[0],
+                                op1_range[1] * op2_range[1],
+                            ),
+                            max(
+                                op1_range[0] * op2_range[0],
+                                op1_range[0] * op2_range[1],
+                                op1_range[1] * op2_range[0],
+                                op1_range[1] * op2_range[1],
+                            ),
+                        ]
+                    elif instr.operation == "div":
+                        # Handle division with care for zero-divisor ranges
+                        if 0 in range(op2_range[0], op2_range[1] + 1):
+                            raise ValueError("Division by zero encountered in range analysis")
+                        res = [
+                            min(
+                                op1_range[0] // op2_range[0] if op2_range[0] != 0 else float('inf'),
+                                op1_range[0] // op2_range[1] if op2_range[1] != 0 else float('inf'),
+                                op1_range[1] // op2_range[0] if op2_range[0] != 0 else float('inf'),
+                                op1_range[1] // op2_range[1] if op2_range[1] != 0 else float('inf'),
+                            ),
+                            max(
+                                op1_range[0] // op2_range[0] if op2_range[0] != 0 else float('-inf'),
+                                op1_range[0] // op2_range[1] if op2_range[1] != 0 else float('-inf'),
+                                op1_range[1] // op2_range[0] if op2_range[0] != 0 else float('-inf'),
+                                op1_range[1] // op2_range[1] if op2_range[1] != 0 else float('-inf'),
+                            ),
+                        ]
+                    self.ranges[instr.dest] = {"type" : "i32", "value" : res}
+                    print(f"MathOperation: {instr.dest} = {self.ranges[instr.dest]}")
+                elif isinstance(instr, Comparison):
+                    # Comparisons produce a Boolean-like range: [0, 0] or [1, 1]
+                    try:
+                        op1 = int(instr.operand1)
+                        op1_range = [op1,op1]
+                    except:    
+                        op1_range = self.ranges.get(instr.operand1, [0, 0])
+                        op1_range = op1_range["value"]
+                    try:
+                        op2 = int(instr.operand2)
+                        op2_range = [op2,op2]
+                    except:
+                        op2_range = self.ranges.get(instr.operand2, [0, 0])
+                        op2_range = op2_range["value"]
+                    #TODO find out how to interpret ambiguous cases
+                    if instr.operation == "seq":
+                        result = [1, 1] if op1_range == op2_range else [0, 0]
+                    elif instr.operation == "slt":
+                        result = [1, 1] if op1_range[1] < op2_range[0] else [0, 0]
+                    elif instr.operation == "sgt":
+                        result = [1, 1] if op1_range[0] > op2_range[1] else [0, 0]
+                    else:
+                        raise ValueError(f"Unknown comparison operation: {instr.operation}")
+                    self.ranges[instr.dest] = {"type": "i32", "value" : result}
+                    print(f"Comparison: {instr.dest} = {self.ranges[instr.dest]}")
+                elif isinstance(instr, Branch):
+                    # Branch based on a condition's range
+                    if instr.condition != None:
+                        condition_range = self.ranges.get(instr.condition, [0, 0])["value"]
+                        if condition_range[0] == 1:  # Condition is definitely true
+                            current_block_id = int(instr.true_block[:1])
+                        elif condition_range[1] == 0:  # Condition is definitely false
+                            current_block_id = int(instr.false_block[:1])
+                        else:
+                            raise ValueError(
+                                "Cannot determine branch target from condition range"
+                            )
+                        print(f"Branch: Jumping to Block {current_block_id}")
+                        break  # Exit the loop to process the next block
+                    else:
+                        current_block_id = int(instr.true_block[1:])
+                        break
+                elif isinstance(instr, SignExtend):
+                    self.ranges[instr.dest] = self.ranges[instr.src]
+                elif isinstance(instr, GetElementPtr):
+                    ptr = instr.base_ptr
+                    index = instr.indices[-1]
+                    index = self.ranges[index]["value"]
+                    if index[0] < 0 or index[1] > len(self.ranges[ptr]["value"]):
+                        return "stack overflow"
+                    else:
+                        self.ranges[instr.dest] = {"type" : "ptr", "value" : index, "pointee" : ptr}
+                elif isinstance(instr, Return):
+                    # Return ends interpretation with the range of the return value
+                    ret_range = (
+                        self.ranges[instr.ret_value]
+                        if instr.ret_value in self.ranges
+                        else None
+                    )
+                    print(f"Return: {ret_range}")
+                    return ret_range  # End interpretation
+                else:
+                    print(f"CANT PARSE {instr}")
+            else:
+                # If no branch or return, proceed to the next successor
+                if current_block.successors:
+                    current_block_id = current_block.successors[0]
+                else:
+                    print("No more successors; ending interpretation.")
+                    break
+
+
 # Usage
 c_file = "simpleTB/simple1.c"
 target_function ="stackOverflow"
@@ -866,15 +1064,12 @@ code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
 parser = IRParser(code[target_function])
 blocks = parser.parse()
 
-
-
 for block_label, block in blocks.items():
     print(f"Block {block_label}:")
     print(f"  Instructions: {block.instructions}")
     print(f"  Predecessors: {block.predecessors}")
     print(f"  Successors: {block.successors}")
-
-
+"""
 # Assuming `blocks` is already defined and populated
 dfa = DataFlowAnalysis(blocks)
 
@@ -899,12 +1094,8 @@ ret = dfa.analyze_array_access()
 dfa.display_results()
 
 print(ret)
+"""
 
-#errors = dfa.check_oob_with_z3()
-
-#if errors:
-#    print("Out-of-bounds errors detected:")
-#    for error in errors:
-#        print(f"Block ID: {error[0]}, Array: {error[1]}, Index Variable: {error[2]}")
-#else:
-#    print("No out-of-bounds errors detected.")
+interpreter = AbstractInterpreter(blocks)
+ret = interpreter.interpret()
+print(ret)
