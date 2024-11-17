@@ -61,7 +61,7 @@ def analyze_ir(ir_file_path, target_function):
   if not function_data:
     print(f"Function '{target_function}' not found in IR.")
 
-  return function_data
+  return [function_data, function_params]
        
 # Define instruction classes for common LLVM IR instructions
 
@@ -232,12 +232,10 @@ class IRParser:
 
     def parse_instruction(self, line):
         match = re.match(r"(%\d+) = bitcast (.*) (%.*) to (.*)", line)
-
         if match:
             dest_reg = match.group(1)
             source_type = match.group(3)
             target_type = match.group(4)
-
             return Bitcast(dest_reg, source_type, target_type)
 
 
@@ -249,7 +247,6 @@ class IRParser:
             operand1 = match.group(3)
             operand2 = match.group(4)
             return MathOperation(operation, dest, operand1, operand2, op_type)
-        
         match = re.match(r"(%\d+) =\s+srem\s+(.*)\s+(\d+),\s+(\d+)", line)
         if match:
             dest = match.group(1)
@@ -257,8 +254,7 @@ class IRParser:
             op_type = match.group(2)
             operand1 = match.group(3)
             operand2 = match.group(4)
-            return MathOperation(operation, dest, operand1, operand2, op_type)
-        
+            return MathOperation(operation, dest, operand1, operand2, op_type) 
         match = re.match(r"(%\d+) =\s+srem\s+(.*)\s+(%\d+),\s+(%\d+)", line)
         if match:
             dest = match.group(1)
@@ -266,8 +262,7 @@ class IRParser:
             op_type = match.group(2)
             operand1 = match.group(3)
             operand2 = match.group(4)
-            return MathOperation(operation, dest, operand1, operand2, op_type)
-        
+            return MathOperation(operation, dest, operand1, operand2, op_type) 
         match = re.match(r"(%\d+) =\s+srem\s+(.*)\s+(\d+),\s+(%\d+)", line)
         if match:
             dest = match.group(1)
@@ -320,7 +315,6 @@ class IRParser:
             operand1 = math_op_match.group(4)
             operand2 = math_op_match.group(5)
             return MathOperation(operation, dest, operand1, operand2, op_type)
-        
         math_op_match = re.match(r"(%\w+) = (add|sub|mul|div) (.+?) (%\w+), (\w+)", line)
         if math_op_match:
             dest = math_op_match.group(1)
@@ -329,7 +323,6 @@ class IRParser:
             operand1 = math_op_match.group(4)
             operand2 = math_op_match.group(5)
             return MathOperation(operation, dest, operand1, operand2, op_type)
-        
         math_op_match = re.match(r"(%\w+) = (add|sub|mul|div) (.+?) (\w+), (\w+)", line)
         if math_op_match:
             dest = math_op_match.group(1)
@@ -348,13 +341,13 @@ class IRParser:
             return MathOperation(operation, dest, operand1, operand2, op_type)
 
         # Match Comparisons (e.g., icmp, fcmp)
-        cmp_match = re.match(r"(%\w+) = (icmp|fcmp) .+? (.+?) (%\w+), (%\w+)", line)
+        cmp_match = re.match(r"(%\w+) = (icmp|fcmp) (.+?) (.+?) (%\w+), (%\w+)", line)
         if cmp_match:
             dest = cmp_match.group(1)
             operation = cmp_match.group(3)
             op_type = cmp_match.group(2)
-            operand1 = cmp_match.group(4)
-            operand2 = cmp_match.group(5)
+            operand1 = cmp_match.group(5)
+            operand2 = cmp_match.group(6)
             return Comparison(operation, dest, operand1, operand2, op_type)
         cmp_match = re.match(r"(%\w+) = (icmp|fcmp) (.+?) (.+?) (%\w+), (\w+)", line)
         if cmp_match:
@@ -365,7 +358,6 @@ class IRParser:
             operand1 = cmp_match.group(5)
             operand2 = cmp_match.group(6)
             return Comparison(operation, dest, operand1, operand2, op_type)
-        
         cmp_match = re.match(r"(%\w+) = (icmp|fcmp) (.+?) (.+?) (\w+), (\w+)", line)
         if cmp_match:
             dest = cmp_match.group(1)
@@ -400,6 +392,16 @@ class IRParser:
             base_ptr = gep_match.group(4)
             indices = [gep_match.group(5), gep_match.group(6)]
             return GetElementPtr(dest, base_ptr, indices, element_type)
+        if "-" in line:
+            gep_match = re.match(r"(%\w+) = getelementptr inbounds (.+?), (.+) (%\w+), (.+) (.\w+)", line)
+        else:
+            gep_match = re.match(r"(%\w+) = getelementptr inbounds (.+?), (.+) (%\w+), (.+) (\w+)", line)
+        if gep_match:
+            dest = gep_match.group(1)
+            element_type = gep_match.group(2)
+            base_ptr = gep_match.group(4)
+            indices = [gep_match.group(5), gep_match.group(6)]
+            return GetElementPtr(dest, base_ptr, indices, element_type)
 
         # Return None if no matching instruction is found
         ret_match = re.match(r"ret (void)", line)
@@ -428,11 +430,19 @@ class IRParser:
                     arg_type = arg_match.group(1)
                     arg_value = arg_match.group(2)
                     args.append((arg_type,arg_value))
-                arg_match = re.match(r"(\S+) (%?\w+) (%?\w+)", arg)
-                if arg_match:
-                    arg_type = arg_match.group(1)
-                    arg_value = arg_match.group(3)
-                    args.append((arg_type, arg_value))
+                if "align" in arg:
+                    arg_match = re.match(r"(\S+) (%?\w+) (\w+) (%?\w+)", arg)
+                    if arg_match:
+                        arg_type = arg_match.group(1)
+                        arg_value = arg_match.group(4)
+                        args.append((arg_type, arg_value))
+
+                else:
+                    arg_match = re.match(r"(\S+) (%?\w+) (%?\w+)", arg)
+                    if arg_match:
+                        arg_type = arg_match.group(1)
+                        arg_value = arg_match.group(3)
+                        args.append((arg_type, arg_value))
 
             return CallInstruction(dest, func_name, func_type, args)
         
@@ -872,9 +882,23 @@ class DataFlowAnalysis:
 
 
 class AbstractInterpreter:
-    def __init__(self, blocks):
+    def __init__(self, blocks, params):
         self.blocks = blocks
         self.ranges = {}  # Store variable ranges as {var_name: [min, max]}
+        self.array_size_bounds = 8192
+        self.max_abs_val = 8192
+        params = params.split(",")
+        for param in params:
+            triplet = param.split(" ")
+            type_ = triplet[0]
+            var = triplet[-1]
+            if "*" in type_:
+                vals = []
+                for i in range(self.array_size_bounds):
+                    vals.append([10, 8192])
+                self.ranges[var] = {"type" : "ptr", "value" : vals}
+            else:
+                self.ranges[var] = {"type" : type_, "value" : [-(self.max_abs_val),self.max_abs_val]}
 
     def interpret(self):
         current_block_id = 0
@@ -922,10 +946,16 @@ class AbstractInterpreter:
                 elif isinstance(instr, Load):
                     # Load the range of the source into the destination
                     if instr.src in self.ranges:
-                        self.ranges[instr.dest] = self.ranges[instr.src]
+                        if self.ranges[instr.src]["type"] == "ptr":
+                            self.ranges[instr.dest] = {"type" : "ptr", "value" : self.ranges[instr.src]["value"], "pointee" : instr.src}
+                        else:
+                            self.ranges[instr.dest] = self.ranges[instr.src]
                         print(f"Load: {instr.dest} = {self.ranges[instr.src]}")
                     else:
-                        raise ValueError(f"Undefined variable {instr.src}")
+                        if "*" in instr.op_type:
+                            return "use-after-free"
+                        else:
+                            raise ValueError(f"Undefined variable {instr.src}")
                 elif isinstance(instr, MathOperation):
                     try:
                         op1 = int(instr.operand1)
@@ -1004,6 +1034,8 @@ class AbstractInterpreter:
                         result = [1, 1] if op1_range == op2_range else [0, 0]
                     elif instr.operation == "slt":
                         result = [1, 1] if op1_range[1] < op2_range[0] else [0, 0]
+                    elif instr.operation == "sle":
+                        result = [1, 1] if op1_range[1] <= op2_range[0] else [0, 0]
                     elif instr.operation == "sgt":
                         result = [1, 1] if op1_range[0] > op2_range[1] else [0, 0]
                     else:
@@ -1015,9 +1047,9 @@ class AbstractInterpreter:
                     if instr.condition != None:
                         condition_range = self.ranges.get(instr.condition, [0, 0])["value"]
                         if condition_range[0] == 1:  # Condition is definitely true
-                            current_block_id = int(instr.true_block[:1])
+                            current_block_id = int(instr.true_block)
                         elif condition_range[1] == 0:  # Condition is definitely false
-                            current_block_id = int(instr.false_block[:1])
+                            current_block_id = int(instr.false_block)
                         else:
                             raise ValueError(
                                 "Cannot determine branch target from condition range"
@@ -1029,14 +1061,61 @@ class AbstractInterpreter:
                         break
                 elif isinstance(instr, SignExtend):
                     self.ranges[instr.dest] = self.ranges[instr.src]
+                elif isinstance(instr, Bitcast):
+                    self.ranges[instr.dest] = self.ranges[instr.source_type]
                 elif isinstance(instr, GetElementPtr):
                     ptr = instr.base_ptr
                     index = instr.indices[-1]
-                    index = self.ranges[index]["value"]
-                    if index[0] < 0 or index[1] > len(self.ranges[ptr]["value"]):
+                    try:
+                        index = int(index)
+                        index = [index,index]
+                    except:
+                        index = self.ranges[index]["value"]
+                    if  index[1] >= len(self.ranges[ptr]["value"]):
                         return "stack overflow"
+                    if index[0] < 0:
+                        return "buffer underread"
                     else:
                         self.ranges[instr.dest] = {"type" : "ptr", "value" : index, "pointee" : ptr}
+                elif isinstance(instr,CallInstruction):
+                    func_name = instr.func_name[1:]
+                    if func_name == "malloc":
+                        try:
+                            size = int(instr.args[0][1])
+                        except:
+                            size = self.ranges[instr.args[0][1]]["value"][1] #upper bound of range
+                        type_ = "ptr"
+                        vals = []
+                        if size > self.array_size_bounds:
+                            return "Analysis Error:Over maximum array size"
+                        for i in range(int(size)):
+                            vals.append([None,None])
+                        
+                        self.ranges[instr.dest] = {"type": type_, "value" : vals}
+                    elif func_name == "strcpy":
+                        src = instr.args[0][1]
+                        string_len = int(instr.args[3][0][1:]) # this should be the length of the stream we want to copy
+                        if string_len > len(self.ranges[src]["value"]):
+                            return "overflow on strcpy"
+                        else:
+                            for i in range(string_len):
+                                self.ranges[src]["value"][i] = [0,127] #ASCII range
+                    elif func_name == "free":
+                        target = instr.args[0][1]
+                        ptr_to_free = self.ranges[target]["pointee"]
+                        del self.ranges[ptr_to_free]
+                    elif func_name == "llvm.memcpy.p0i8.p0i8.i64":
+                        try:
+                            target = instr.args[0][1]
+                            target = self.ranges[target]["pointee"]
+                            target = self.ranges[target]
+                            source = instr.args[1][1]
+                            source = self.ranges[source]["pointee"]
+                            source = self.ranges[source]
+                            if len(target["value"]) < len(source["value"]):
+                                return "heap buffer overflow"
+                        except:
+                            pass
                 elif isinstance(instr, Return):
                     # Return ends interpretation with the range of the return value
                     ret_range = (
@@ -1044,8 +1123,14 @@ class AbstractInterpreter:
                         if instr.ret_value in self.ranges
                         else None
                     )
-                    print(f"Return: {ret_range}")
-                    return ret_range  # End interpretation
+                    if instr.ret_type != "void":
+                        if "pointee" in self.ranges[instr.ret_value]:
+                            ptr = self.ranges[instr.ret_value]["pointee"]
+                            if self.ranges[ptr]["type"] == "ptr":
+                                print(f"Return: {ret_range}")
+                                return ret_range  # End interpretation
+                            else:
+                                return "return of pointer outside expected range"
                 else:
                     print(f"CANT PARSE {instr}")
             else:
@@ -1058,10 +1143,10 @@ class AbstractInterpreter:
 
 
 # Usage
-c_file = "simpleTB/simple1.c"
-target_function ="stackOverflow"
+c_file = "simpleTB/mid1.c"
+target_function ="nested_overflow"
 code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
-parser = IRParser(code[target_function])
+parser = IRParser(code[0][target_function])
 blocks = parser.parse()
 
 for block_label, block in blocks.items():
@@ -1096,6 +1181,6 @@ dfa.display_results()
 print(ret)
 """
 
-interpreter = AbstractInterpreter(blocks)
+interpreter = AbstractInterpreter(blocks, code[1])
 ret = interpreter.interpret()
 print(ret)
