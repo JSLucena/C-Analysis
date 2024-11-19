@@ -13,7 +13,7 @@ def generate_and_analyze_ir(c_file_path, analysis_function, target_function):
     try:
         # Generate LLVM IR using clang
         subprocess.run(
-            ["clang", "-S", "-emit-llvm", c_file_path, "-o", ir_file_path],
+            ["clang", "-S", "-Itestcasesupport/", "-emit-llvm", c_file_path, "-o", ir_file_path],
             check=True
         )
         print(f"Generated IR file: {ir_file_path}")
@@ -173,18 +173,25 @@ class BasicBlock:
 
 # Define the IRParser class
 class IRParser:
-    def __init__(self, ir_content):
+    def __init__(self, ir_content, params):
         self.ir_content = ir_content
         self.blocks = {}  # Dictionary of blocks with label as key
         self.current_block = None
         self.entry_block_initialized = False  # Track if the entry block has been created
+        if "," in params:
+            params = params.split(",")
+
+            self.first_block = len(params)
+        else:
+            self.first_block = 0
+        print(params, self.first_block)
 
     def parse(self):
         lines = self.ir_content.splitlines()
 
         # Initialize the entry block
-        self.current_block = BasicBlock(0)
-        self.blocks[0] = self.current_block
+        self.current_block = BasicBlock(self.first_block)
+        self.blocks[self.first_block] = self.current_block
         self.entry_block_initialized = True
         self.cycles = None
 
@@ -739,7 +746,7 @@ class DataFlowAnalysis:
         #dest = cond.dest
         #operand1 =cond.operand1
         operand2 = cond.operand2
-        op_type = cond.op_type
+        op_type = cond.operation
         try:
             operand2 = int(operand2)
         except:
@@ -887,6 +894,8 @@ class AbstractInterpreter:
         self.ranges = {}  # Store variable ranges as {var_name: [min, max]}
         self.array_size_bounds = 8192
         self.max_abs_val = 8192
+        self.instruction_count = 0
+        self.requires_analysis = []
         params = params.split(",")
         for param in params:
             triplet = param.split(" ")
@@ -895,16 +904,22 @@ class AbstractInterpreter:
             if "*" in type_:
                 vals = []
                 for i in range(self.array_size_bounds):
-                    vals.append([10, 8192])
+                    if type_ == "i8*":
+                        vals.append([0, 127])
+                    else:
+                        vals.append([-(self.max_abs_val),self.max_abs_val])
                 self.ranges[var] = {"type" : "ptr", "value" : vals}
             else:
-                self.ranges[var] = {"type" : type_, "value" : [-(self.max_abs_val),self.max_abs_val]}
+                self.ranges[var] = {"type" : "i32", "value" : [-(self.max_abs_val),self.max_abs_val]}
 
     def interpret(self):
-        current_block_id = 0
+        current_block_id = list(self.blocks.keys())[0]
         while True:
             current_block = self.blocks[current_block_id]
             print(f"Interpreting Block {current_block_id}...")
+
+            if self.instruction_count > 16* self.max_abs_val:
+                return "analysis timerout"
 
             for instr in current_block.instructions:
                 if isinstance(instr, Alloca):
@@ -1013,6 +1028,10 @@ class AbstractInterpreter:
                                 op1_range[1] // op2_range[1] if op2_range[1] != 0 else float('-inf'),
                             ),
                         ]
+                    if abs(res[0]) > self.max_abs_val:
+                        res[0] = self.max_abs_val * res[0]/abs(res[0]) #multiply the sign by our max
+                    if abs(res[1]) > self.max_abs_val:
+                        res[1] = self.max_abs_val * res[1]/abs(res[1]) #multiply the sign by our max
                     self.ranges[instr.dest] = {"type" : "i32", "value" : res}
                     print(f"MathOperation: {instr.dest} = {self.ranges[instr.dest]}")
                 elif isinstance(instr, Comparison):
@@ -1028,19 +1047,67 @@ class AbstractInterpreter:
                         op2_range = [op2,op2]
                     except:
                         op2_range = self.ranges.get(instr.operand2, [0, 0])
-                        op2_range = op2_range["value"]
-                    #TODO find out how to interpret ambiguous cases
-                    if instr.operation == "seq":
-                        result = [1, 1] if op1_range == op2_range else [0, 0]
+                        if instr.operand2 == "null":
+                            op2_range = [0,0]
+                        else:
+                            op2_range = op2_range["value"]
+
+
+                    def ranges_overlap(r1, r2):
+                        return not (r1[1] < r2[0] or r2[1] < r1[0])
+                    
+                    if instr.operation == "seq":  # ==
+                        if op1_range == op2_range:
+                            # Same single-value range, definitely equal
+                            result = [1, 1]
+                        elif not ranges_overlap(op1_range, op2_range):
+                            # No overlap, definitely not equal
+                            result =  [0, 0]
+                        else:
+                            # Ranges overlap, might be equal
+                            result =  [0, 1]
+                            
+                    elif instr.operation == "ne":  # !=
+                        if op1_range == op2_range:
+                            # Same single-value range, definitely equal so definitely not unequal
+                            result =  [0, 0]
+                        elif not ranges_overlap(op1_range, op2_range):
+                            # No overlap, definitely unequal
+                            result =  [1, 1]
+                        else:
+                            # Ranges overlap, might be unequal
+                            result =  [0, 1]
                     elif instr.operation == "slt":
-                        result = [1, 1] if op1_range[1] < op2_range[0] else [0, 0]
+                        if op1_range[1] < op2_range[0]:
+                            result =  [1, 1]
+                        elif op1_range[0] >= op2_range[1]:
+                            result =  [0, 0]
+                        else:
+                            result =  [0, 1]
                     elif instr.operation == "sle":
-                        result = [1, 1] if op1_range[1] <= op2_range[0] else [0, 0]
+                        if op1_range[1] < op2_range[0]:
+                            result =  [1, 1]
+                        elif op1_range[0] > op2_range[1]:
+                            result =  [0, 0]
+                        else:
+                            result =  [0, 1]
                     elif instr.operation == "sgt":
-                        result = [1, 1] if op1_range[0] > op2_range[1] else [0, 0]
+                        if op1_range[0] > op2_range[1]:
+                            result =  [1, 1]
+                        elif op1_range[1] <= op2_range[0]:
+                            result =  [0, 0]
+                        else:
+                            result =  [0, 1]
+                    elif instr.operation == "sge":
+                        if op1_range[0] > op2_range[1]:
+                            result =  [1, 1]
+                        elif op1_range[1] < op2_range[0]:
+                            result =  [0, 0]
+                        else:
+                            result =  [0, 1]
                     else:
                         raise ValueError(f"Unknown comparison operation: {instr.operation}")
-                    self.ranges[instr.dest] = {"type": "i32", "value" : result}
+                    self.ranges[instr.dest] = {"type" : "i32", "value" : result}
                     print(f"Comparison: {instr.dest} = {self.ranges[instr.dest]}")
                 elif isinstance(instr, Branch):
                     # Branch based on a condition's range
@@ -1051,9 +1118,9 @@ class AbstractInterpreter:
                         elif condition_range[1] == 0:  # Condition is definitely false
                             current_block_id = int(instr.false_block)
                         else:
-                            raise ValueError(
-                                "Cannot determine branch target from condition range"
-                            )
+                            current_block_id = int(instr.true_block)
+                            self.requires_analysis.append(instr.false_block)
+
                         print(f"Branch: Jumping to Block {current_block_id}")
                         break  # Exit the loop to process the next block
                     else:
@@ -1089,7 +1156,7 @@ class AbstractInterpreter:
                         if size > self.array_size_bounds:
                             return "Analysis Error:Over maximum array size"
                         for i in range(int(size)):
-                            vals.append([None,None])
+                            vals.append([0,0])
                         
                         self.ranges[instr.dest] = {"type": type_, "value" : vals}
                     elif func_name == "strcpy":
@@ -1100,6 +1167,17 @@ class AbstractInterpreter:
                         else:
                             for i in range(string_len):
                                 self.ranges[src]["value"][i] = [0,127] #ASCII range
+                    elif func_name == "strncpy":
+                        buffer = instr.args[0][1]
+                        data = instr.args[1][1]
+                        length = instr.args[2][1]
+                        buffer = self.ranges[buffer]
+                        data = self.ranges[data]
+                        length = self.ranges[length]["value"]
+                        if length[1] >= len(buffer["value"]):
+                            return "buffer overflow"
+                        elif length[0] < 0:
+                            return "buffer underflow"
                     elif func_name == "free":
                         target = instr.args[0][1]
                         ptr_to_free = self.ranges[target]["pointee"]
@@ -1116,6 +1194,17 @@ class AbstractInterpreter:
                                 return "heap buffer overflow"
                         except:
                             pass
+                    elif func_name == "strlen":
+                        length = len(self.ranges[instr.args[0][1]]["value"])
+                        self.ranges[instr.dest] = {"type": "i32", "value" : [length,length]}
+                    elif func_name == "realloc":
+                        buffer = instr.args[0][1]
+                        new_size = instr.args[1][1]
+                        new_size = self.ranges[new_size]["value"]
+                        if new_size[0] < 0:
+                            return "buffer underflow"
+                        new_vals = self.ranges[buffer]["value"][:new_size[1]]
+                        self.ranges[buffer]["value"] = new_vals 
                 elif isinstance(instr, Return):
                     # Return ends interpretation with the range of the return value
                     ret_range = (
@@ -1133,20 +1222,32 @@ class AbstractInterpreter:
                                 return "return of pointer outside expected range"
                 else:
                     print(f"CANT PARSE {instr}")
+                self.instruction_count += 1
             else:
                 # If no branch or return, proceed to the next successor
                 if current_block.successors:
                     current_block_id = current_block.successors[0]
                 else:
-                    print("No more successors; ending interpretation.")
-                    break
+                    if len(self.requires_analysis) > 0:
+                        current_block_id = self.requires_analysis.pop()
+                    else:
+                        print("No more successors; ending interpretation.")
+                        break
+
+
+
+#TODO
+# mid1 - 2d arrays
+# mid8, 
+# mid9 - Strange bug. Cant even debug this shit
+# mid11 - works but takes a shitlong of time
 
 
 # Usage
-c_file = "simpleTB/mid1.c"
-target_function ="nested_overflow"
+c_file = "simpleTB/mid10.c"
+target_function ="dynamic_write"
 code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
-parser = IRParser(code[0][target_function])
+parser = IRParser(code[0][target_function], code[1])
 blocks = parser.parse()
 
 for block_label, block in blocks.items():
@@ -1177,9 +1278,10 @@ dfa.get_mallocs()
 ret = dfa.analyze_array_access()
 # Display results
 dfa.display_results()
-
 print(ret)
 """
+
+
 
 interpreter = AbstractInterpreter(blocks, code[1])
 ret = interpreter.interpret()
