@@ -1,39 +1,87 @@
+from cparser import setup_tree_sitter
 from tree_sitter import Language, Parser
+import warnings
+import re
 
-Language.build_library(
-    'E:/42finals/my-languages.so',
-    [
-        'E:/42finals/tree-sitter-c'
-    ]
-)
+warnings.simplefilter("ignore", FutureWarning)
+# Language.build_library(
+#     'build/my-languages.so',
+#     [
+#         './tree-sitter-c'
+#     ]
+# )
 
-C_LANGUAGE = Language('E:/42finals/my-languages.so', 'c')
+C_LANGUAGE = Language('build/language.so', 'c')
 parser = Parser()
 parser.set_language(C_LANGUAGE)
 
+# Variable class
+target_function = 'void stackOverflow'
+# Path to C file
+filename = 'simpleTB/simple1.c'
 
-code = """
-#include <stdio.h>
-#include <stdlib.h>
+def extract_function_code_from_text(code, function_name):
+    lines = code.splitlines()  # Split the code into lines
 
-void reallocate_buffer(int newSize) {
-    char *buffer = (char *)malloc(10);
-    // CWE-122: Heap-based Buffer Overflow
-    // CWE-680: Integer Overflow to Buffer Overflow if newSize is large
-    buffer = realloc(buffer, newSize); // Potentially reallocates to smaller size
-    for (int i = 0; i < newSize; i++) {
-        buffer[i] = 'A'; // Out-of-bounds write if reallocated buffer is smaller
-    }
-    free(buffer);
-}
+    function_code = []
+    inside_function = False
+    indentation_level = None
 
-int main() {
-    reallocate_buffer(20); // Unsafe if newSize is uncontrolled
-    return 0;
-}
-"""
+
+       # Use a regex pattern to match the function definition
+    function_pattern = re.compile(rf'{function_name}')
+
+    for line in lines:
+        if function_pattern.match(line):
+    
+            indent_level = len(line) - len(line.lstrip())
+            print(f"Indentation level: {indent_level}")
+            function_code.append(line)
+            # Check if the current line marks the end of the function (by indentation level)
+            current_indent_level = len(line) - len(line.lstrip())
+            print(f"Current Indentation level: {current_indent_level}")
+
+            if inside_function == False:
+                inside_function = True
+                print("false -> true")
+                continue
+            if current_indent_level == indent_level and line.strip() != "" :
+                print("break")
+                break
+
+    return "".join(function_code)
+
+with open(filename, 'r') as file:
+    code = file.read()
+    print(code)
+
+    code = extract_function_code_from_text(code, target_function)
+    print(code)
+
+    # c_parser = setup_tree_sitter()
+
+#code = """
+#void CWE416_Use_After_Free__malloc_free_char_01_bad()
+#{
+#    char * data;
+#    /* Initialize data */
+#    data = NULL;
+#    data = (char *)malloc(100*sizeof(char));
+#    if (data == NULL) {exit(-1);}
+#    memset(data, 'A', 100-1);
+#    data[100-1] = '\0';
+#    /* POTENTIAL FLAW: Free data in the source - the bad sink attempts to use data */
+#    free(data);
+#    /* POTENTIAL FLAW: Use of data that may have been freed */
+#    printLine(data);
+#    /* POTENTIAL INCIDENTAL - Possible memory leak here if data was not freed */
+#}
+#
+#
+#"""
 
 tree = parser.parse(bytes(code, "utf8"))
+#print(tree.root_node.__dir__())
 
 def query_loop(tree, code):
     query_string = """
