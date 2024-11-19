@@ -491,9 +491,10 @@ class DataFlowAnalysis:
         self.loop_bounds = {block_id: [] for block_id in blocks}
         self.arrays_declarations = {}
         self.cycles = None
-        self.pointers = {block_id: {} for block_id in blocks}
+        self.pointers = {}
         self.available_expressions = {block_id: set() for block_id in blocks}
         self.live_variables = {block_id: set() for block_id in blocks}
+        self.pointer_assignments = {block_id: [] for block_id in blocks}
 
     def reaching_definitions_analysis(self):
         # Initialize worklist with all blocks
@@ -721,7 +722,10 @@ class DataFlowAnalysis:
         for block_id, block in self.blocks.items():
             for instr in block.instructions:
                 if isinstance(instr, GetElementPtr):
-                    ret =self.find_origin(block_id,instr.indices[-1])
+                    try:
+                        ret = int(instr.indices[-1])
+                    except:
+                        ret =self.find_origin(block_id,instr.indices[-1])
                     for index, arr in enumerate(self.array_accesses[block_id]):
                         if arr[0] == instr.base_ptr:
                             self.array_accesses[block_id][index][1] = ret
@@ -773,11 +777,13 @@ class DataFlowAnalysis:
         for block_id, accesses in self.array_accesses.items():
             for acc in accesses:
                 array = self.arrays_declarations[acc[0]]
-                values = self.ranges[block_id][acc[1]]
-                if values[0] < 0 or values[1] > array[0]:
+                try:
+                    values = self.ranges[block_id][acc[1]]
+                except:
+                    values = [acc[1],acc[1]]
+                if values[0] < 0 or values[1] >= array[0]:
                     return "stack overflow"
-                else:
-                    return "ok"
+        return "ok"
 
     def find_origin(self, block_id, var_name):
         block = self.blocks[block_id]
@@ -841,17 +847,54 @@ class DataFlowAnalysis:
             for instr in block.instructions:
                 if isinstance(instr, Alloca):
                     if "*" in instr.op_type:
-                        self.pointers[block_id][instr.dest] = [instr.op_type,-1,0] #-1 represents size if malloced, 0 is value
+                        self.pointers[instr.dest] = [instr.op_type,-1,0] #-1 represents size if malloced, 0 is value
 
     def get_mallocs(self):
-        for block_id, pointers in self.pointers.items():
-            for name, data in pointers.items():
+        for name, pointer in self.pointers.items():
+            worklist = list(self.blocks.keys())
+            for block_id in worklist:
                 for thing in self.reaching_definitions[block_id]:
                     if thing[0] == name:
                         ptr_expr = thing[1]
                         origin = ptr_expr.src
                         origin = self.find_origin(block_id,origin)
                         origin_expr = self.reaching_definitions[block_id]
+                        for expr in origin_expr:
+                            if expr[0] == origin:
+                                if isinstance(expr[1],CallInstruction):
+                                    if expr[1].func_name == "@malloc":
+                                        size = expr[1].args[0][1]
+                                        try:
+                                            self.pointers[name][1] = int(size)
+                                        except:
+                                            self.pointers[name][1] = size
+
+    def get_pointer_assignments(self):
+        worklist = list(self.blocks.keys())
+        for block_id in worklist:
+            block = self.blocks[block_id]
+            for instr in block.instructions:
+                if isinstance(instr, CallInstruction):
+                    if instr.func_name == "@strcpy":
+                        target = instr.args[0][1]
+                        origin = self.find_origin(block_id,target)
+                        srcbuffer = instr.args[3][0][1:]
+                        try:
+                            srcbuffer = int(srcbuffer)
+                        except:
+                            srcbuffer = srcbuffer
+                        self.pointer_assignments[block_id].append( ["strcpy", origin, srcbuffer])
+                     
+    def analyze_pointers(self):
+        worklist = list(self.blocks.keys())
+        for block_id in worklist:
+            for ass in self.pointer_assignments[block_id]:
+                if ass[0] == "strcpy":
+                    if self.pointers[ass[1]][1] < ass[2]:
+                        return "Heap overflow"
+                    
+        return "ok"
+
 
 
 
@@ -873,6 +916,15 @@ class DataFlowAnalysis:
         for block, arrays in self.array_accesses.items():
             for array in arrays:
                 print(f"Block {block}, array {array[0]}, index {array[1]}")
+
+        print("\nPointer allocation found:")
+        for block_id, data in self.pointers.items():
+            print(f"Block {block_id}: {data}")
+        
+        print("\nPointer allocations found:")
+        for block, data in self.pointer_assignments.items():
+            print(f"Block {block}, access {data}")
+        
         
         print("\nLive Variables Analysis Results:")
         for block_id, vars in self.live_variables.items():
@@ -1236,16 +1288,20 @@ class AbstractInterpreter:
 
 
 
-#TODO
+#TODO Abstract Interpreter
 # mid1 - 2d arrays
 # mid8, 
 # mid9 - Strange bug. Cant even debug this shit
 # mid11 - works but takes a shitlong of time
+###########################################################
+
+#TODO Dataflow
+# simple6 - free
 
 
 # Usage
-c_file = "simpleTB/mid10.c"
-target_function ="dynamic_write"
+c_file = "simpleTB/simple6.c"
+target_function ="doubleFree"
 code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
 parser = IRParser(code[0][target_function], code[1])
 blocks = parser.parse()
@@ -1255,7 +1311,7 @@ for block_label, block in blocks.items():
     print(f"  Instructions: {block.instructions}")
     print(f"  Predecessors: {block.predecessors}")
     print(f"  Successors: {block.successors}")
-"""
+
 # Assuming `blocks` is already defined and populated
 dfa = DataFlowAnalysis(blocks)
 
@@ -1275,14 +1331,19 @@ dfa.get_array_index()
 dfa.get_loop_bound()
 dfa.get_pointers()
 dfa.get_mallocs()
-ret = dfa.analyze_array_access()
-# Display results
+dfa.get_pointer_assignments()
 dfa.display_results()
+ret = dfa.analyze_array_access()
 print(ret)
-"""
+# Display results
 
 
-
-interpreter = AbstractInterpreter(blocks, code[1])
-ret = interpreter.interpret()
+ret = dfa.analyze_pointers()
 print(ret)
+
+
+
+
+#interpreter = AbstractInterpreter(blocks, code[1])
+#ret = interpreter.interpret()
+#print(ret)
