@@ -16,46 +16,81 @@ parser = Parser()
 parser.set_language(C_LANGUAGE)
 
 # Variable class
-target_function = 'void stackOverflow'
+target_function = 'stackOverflow'
 # Path to C file
 filename = 'simpleTB/simple1.c'
 
-def extract_function_code_from_text(code, function_name):
-    lines = code.splitlines()  # Split the code into lines
+import ast
+import astor
 
-    function_code = []
-    inside_function = False
-    indentation_level = None
-
-
-       # Use a regex pattern to match the function definition
-    function_pattern = re.compile(rf'{function_name}')
-
-    for line in lines:
-        if function_pattern.match(line):
+def extract_function(source_code: str, function_name: str) -> str:
+    """
+    Extract a function from source code, supporting various function signatures.
     
-            indent_level = len(line) - len(line.lstrip())
-            print(f"Indentation level: {indent_level}")
-            function_code.append(line)
-            # Check if the current line marks the end of the function (by indentation level)
-            current_indent_level = len(line) - len(line.lstrip())
-            print(f"Current Indentation level: {current_indent_level}")
-
-            if inside_function == False:
-                inside_function = True
-                print("false -> true")
-                continue
-            if current_indent_level == indent_level and line.strip() != "" :
-                print("break")
-                break
-
-    return "".join(function_code)
+    Args:
+        source_code (str): The complete source code containing the target function
+        function_name (str): Name of the function to extract
+    
+    Returns:
+        str: The extracted function code, or None if not found
+    """
+    # Build the pattern pieces separately to avoid f-string confusion
+    function_body = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
+    
+    pattern = (
+        # Match optional return type and modifiers
+        r'((?:(?:virtual|static|public|private|protected|inline|extern|const)\s+)*)?'
+        # Match return type (optional)
+        r'(?:[\w\d_:*&<>\s]+\s+)?'
+        # Match function name
+        f'{re.escape(function_name)}\\s*'
+        # Match parameters
+        r'\([^)]*\)\s*'
+        # Match optional const modifier and trailing specifiers
+        r'(?:\s*const)?\s*'
+        r'(?:override|final)?\s*'
+        # Match function body
+        f'{function_body}'
+    )
+    
+    # Compile pattern with verbose flag and multiline support
+    compiled_pattern = re.compile(pattern, re.VERBOSE | re.MULTILINE | re.DOTALL)
+    
+    # Find all matches
+    matches = compiled_pattern.finditer(source_code)
+    
+    # Extract and format the functions
+    found_functions = []
+    for match in matches:
+        function_code = match.group(0)
+        # Clean up whitespace but preserve indentation
+        lines = function_code.split('\n')
+        # Remove empty lines at start and end
+        while lines and not lines[0].strip():
+            lines.pop(0)
+        while lines and not lines[-1].strip():
+            lines.pop()
+        
+        # Find minimum indentation (excluding empty lines)
+        non_empty_lines = [line for line in lines if line.strip()]
+        if non_empty_lines:
+            min_indent = min(len(line) - len(line.lstrip()) for line in non_empty_lines)
+            # Remove minimum indentation from all lines
+            lines = [line[min_indent:] if line.strip() else '' for line in lines]
+        
+        found_functions.append('\n'.join(lines))
+    
+    if not found_functions:
+        return None
+    
+    # Return all found functions joined by newlines
+    return '\n\n'.join(found_functions)
 
 with open(filename, 'r') as file:
     code = file.read()
     print(code)
 
-    code = extract_function_code_from_text(code, target_function)
+    code = extract_function(code, target_function)
     print(code)
 
     # c_parser = setup_tree_sitter()
