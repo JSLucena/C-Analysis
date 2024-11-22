@@ -6,6 +6,30 @@ from typing import Optional, List, Dict, Set
 from dataclasses import dataclass
 from z3 import *
 import networkx as nx
+
+def get_c_file_functions(directory):
+    c_file_functions = {}
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith('.c'):
+                c_file = os.path.join(root, file)
+                functions = get_function_names(c_file)
+                c_file_functions[c_file] = functions
+    return c_file_functions
+EXCLUDED_FUNCTIONS = ['main','realloc', 'sizeof','malloc', 'free', 'printf', 'scanf', 'fopen', 'fclose', 'memcpy', 'memset', 'strcpy', 'strncpy', 'strlen', 'rand', 'srand']
+def get_function_names(c_file):
+    function_names = []
+    with open(c_file, 'r') as file:
+        content = file.read()
+        functions = re.findall(r'\S+ \w+\(.*?\)', content)
+        for func in functions:
+            f = func.split()[1]
+            function_name_only = f.split("(")[0]
+            if function_name_only not in EXCLUDED_FUNCTIONS:
+                function_names.append(function_name_only)
+    return function_names
+
+
 def generate_and_analyze_ir(c_file_path, analysis_function, target_function):
     # Define the output path for the LLVM IR file
     ir_file_path = c_file_path.replace(".c", ".ll")
@@ -14,9 +38,10 @@ def generate_and_analyze_ir(c_file_path, analysis_function, target_function):
         # Generate LLVM IR using clang
         subprocess.run(
             ["clang", "-S", "-Itestcasesupport/", "-emit-llvm", c_file_path, "-o", ir_file_path],
-            check=True
+            check=True,
+            stderr=subprocess.DEVNULL
         )
-        print(f"Generated IR file: {ir_file_path}")
+        #print(f"Generated IR file: {ir_file_path}")
 
         # Perform analysis on the specific function in the IR
         code = analysis_function(ir_file_path, target_function)
@@ -25,7 +50,7 @@ def generate_and_analyze_ir(c_file_path, analysis_function, target_function):
         # Clean up: delete the IR file after analysis
         if os.path.exists(ir_file_path):
             os.remove(ir_file_path)
-            print(f"Deleted IR file: {ir_file_path}")
+            #print(f"Deleted IR file: {ir_file_path}")
         return code
 
 def analyze_ir(ir_file_path, target_function):
@@ -54,9 +79,9 @@ def analyze_ir(ir_file_path, target_function):
       function_params = match.group(3)
       function_ir = match.group(4)
       function_data[function_name] = function_ir
-      print(f"Function '{target_function}' (Occurrence):")
-      print(f"  Parameters: {function_params}")
-      print(f"  IR:\n{function_ir}\n")
+      #print(f"Function '{target_function}' (Occurrence):")
+      #print(f"  Parameters: {function_params}")
+      #print(f"  IR:\n{function_ir}\n")
 
   if not function_data:
     print(f"Function '{target_function}' not found in IR.")
@@ -184,7 +209,7 @@ class IRParser:
             self.first_block = len(params)
         else:
             self.first_block = 0
-        print(params, self.first_block)
+        #print(params, self.first_block)
 
     def parse(self):
         lines = self.ir_content.splitlines()
@@ -434,9 +459,10 @@ class IRParser:
             for arg in args_str.split(", "):
                 if "getelementptr inbounds" in arg:
                     gep_match = re.match(r"(.+?) (.*) \((.*)", arg)
-                    arg_type = arg_match.group(1)
-                    arg_value = arg_match.group(2)
-                    args.append((arg_type,arg_value))
+                    if gep_match:
+                        arg_type = gep_match.group(1)
+                        arg_value = gep_match.group(2)
+                        args.append((arg_type,arg_value))
                 if "align" in arg:
                     arg_match = re.match(r"(\S+) (%?\w+) (\w+) (%?\w+)", arg)
                     if arg_match:
@@ -446,10 +472,18 @@ class IRParser:
 
                 else:
                     arg_match = re.match(r"(\S+) (%?\w+) (%?\w+)", arg)
+                    match = False
                     if arg_match:
                         arg_type = arg_match.group(1)
                         arg_value = arg_match.group(3)
                         args.append((arg_type, arg_value))
+                        match = True
+                    if not match:
+                        arg_match = re.match(r"(\S+) (%?\w+)", arg)
+                        if arg_match:
+                            arg_type = arg_match.group(1)
+                            arg_value = arg_match.group(2)
+                            args.append((arg_type, arg_value))
 
             return CallInstruction(dest, func_name, func_type, args)
         
@@ -968,7 +1002,7 @@ class AbstractInterpreter:
         current_block_id = list(self.blocks.keys())[0]
         while True:
             current_block = self.blocks[current_block_id]
-            print(f"Interpreting Block {current_block_id}...")
+            #print(f"Interpreting Block {current_block_id}...")
 
             if self.instruction_count > 16* self.max_abs_val:
                 return "analysis timerout"
@@ -988,10 +1022,20 @@ class AbstractInterpreter:
                             vals.append([None,None])
                         self.ranges[instr.dest] = {"type": type_, "value" : vals}
                     else:
-                        self.ranges[instr.dest] = {"type": instr.op_type, "value" : [None,None]}
+                        dynamic_pattern = r"(\S+), (\w+) (\S+)"
+                        match = re.match(dynamic_pattern,instr.op_type)
+                        if match:
+                            size = match.group(3)
+                            type_ = match.group(1)
+                            vals = []
+                            for i in range(int(size)):
+                                vals.append([None,None])
+                            self.ranges[instr.dest] = {"type": type_, "value" : vals}
+                        else:
+                            self.ranges[instr.dest] = {"type": instr.op_type, "value" : [None,None]}
                     # Initialize allocated variable with [0, 0]
                     
-                    print(f"Alloca: {instr.dest}")
+                    #print(f"Alloca: {instr.dest}")
                 elif isinstance(instr, Store):
                     # Update the range of the destination with the source range or constant
                     try:
@@ -1003,21 +1047,24 @@ class AbstractInterpreter:
                             self.ranges[instr.dest]["value"] = [src, src]
                         elif src in self.ranges:
                             self.ranges[instr.dest] = self.ranges[src]
-                        print(f"Store: {instr.dest} = {self.ranges[instr.dest]}")
+                        #print(f"Store: {instr.dest} = {self.ranges[instr.dest]}")
                     else:
                         pointee = self.ranges[instr.dest]["pointee"]
                         index = self.ranges[instr.dest]["value"]
                         for i in range(index[0], index[1]):
                             self.ranges[pointee]["value"][i] = [src,src]
-                        print(f"Store: {pointee} = {self.ranges[pointee]}")
+                        #print(f"Store: {pointee} = {self.ranges[pointee]}")
                 elif isinstance(instr, Load):
                     # Load the range of the source into the destination
                     if instr.src in self.ranges:
                         if self.ranges[instr.src]["type"] == "ptr":
                             self.ranges[instr.dest] = {"type" : "ptr", "value" : self.ranges[instr.src]["value"], "pointee" : instr.src}
                         else:
-                            self.ranges[instr.dest] = self.ranges[instr.src]
-                        print(f"Load: {instr.dest} = {self.ranges[instr.src]}")
+                            if len(self.ranges[instr.src]["value"]) > 2:
+                                self.ranges[instr.dest] = {"type" : "ptr", "value" : self.ranges[instr.src]["value"], "pointee" : instr.src}
+                            else:
+                                self.ranges[instr.dest] = self.ranges[instr.src]
+                        #print(f"Load: {instr.dest} = {self.ranges[instr.src]}")
                     else:
                         if "*" in instr.op_type:
                             return "use-after-free"
@@ -1039,8 +1086,8 @@ class AbstractInterpreter:
                     res = None
                     if instr.operation == "add":
                         res = [
-                            min( op1_range[0], op2_range[0], op1_range[0]  + op2_range[0]),
-                            max(op1_range[1], op2_range[1], op1_range[1] + op2_range[1])
+                            min( op1_range[0], op1_range[0]  + op2_range[0]),
+                            max(op1_range[1], op1_range[1] + op2_range[1])
                         ]
                     elif instr.operation == "sub":
                         res = [
@@ -1085,7 +1132,7 @@ class AbstractInterpreter:
                     if abs(res[1]) > self.max_abs_val:
                         res[1] = self.max_abs_val * res[1]/abs(res[1]) #multiply the sign by our max
                     self.ranges[instr.dest] = {"type" : "i32", "value" : res}
-                    print(f"MathOperation: {instr.dest} = {self.ranges[instr.dest]}")
+                    #print(f"MathOperation: {instr.dest} = {self.ranges[instr.dest]}")
                 elif isinstance(instr, Comparison):
                     # Comparisons produce a Boolean-like range: [0, 0] or [1, 1]
                     try:
@@ -1160,7 +1207,7 @@ class AbstractInterpreter:
                     else:
                         raise ValueError(f"Unknown comparison operation: {instr.operation}")
                     self.ranges[instr.dest] = {"type" : "i32", "value" : result}
-                    print(f"Comparison: {instr.dest} = {self.ranges[instr.dest]}")
+                    #print(f"Comparison: {instr.dest} = {self.ranges[instr.dest]}")
                 elif isinstance(instr, Branch):
                     # Branch based on a condition's range
                     if instr.condition != None:
@@ -1173,7 +1220,7 @@ class AbstractInterpreter:
                             current_block_id = int(instr.true_block)
                             self.requires_analysis.append(instr.false_block)
 
-                        print(f"Branch: Jumping to Block {current_block_id}")
+                        #print(f"Branch: Jumping to Block {current_block_id}")
                         break  # Exit the loop to process the next block
                     else:
                         current_block_id = int(instr.true_block[1:])
@@ -1247,7 +1294,11 @@ class AbstractInterpreter:
                         except:
                             pass
                     elif func_name == "strlen":
-                        length = len(self.ranges[instr.args[0][1]]["value"])
+                        try:
+                            ptr = self.ranges[instr.args[0][1]]["pointee"]
+                            length = len(self.ranges[ptr]["value"])
+                        except:
+                            length = len(self.ranges[instr.args[0][1]]["value"])
                         self.ranges[instr.dest] = {"type": "i32", "value" : [length,length]}
                     elif func_name == "realloc":
                         buffer = instr.args[0][1]
@@ -1257,6 +1308,77 @@ class AbstractInterpreter:
                             return "buffer underflow"
                         new_vals = self.ranges[buffer]["value"][:new_size[1]]
                         self.ranges[buffer]["value"] = new_vals 
+
+                    elif "llvm.memset" in func_name:
+                        try:
+                            target = instr.args[0][1]
+                            try:
+                                target = self.ranges[target]["pointee"]
+                                target = self.ranges[target]
+                            except:
+                                target = self.ranges[target]
+
+                            value = int(instr.args[1][1])  # value to set
+                            length = instr.args[2][1]
+                            try:
+                                length = int(length)
+                                length = [length,length]
+                            except:
+                                length = self.ranges[length]["value"]
+                            
+                            if length[1] > len(target["value"]):
+                                return "buffer overflow"
+                            
+                            # Set all elements to the specified value range
+                            for i in range(0, length[1] + 1):
+                                target["value"][i] = [value, value]
+                        except:
+                            pass
+
+                    elif func_name == "llvm.memmove.p0i8.p0i8.i64":
+                        try:
+                            target = instr.args[0][1]
+                            target = self.ranges[target]["pointee"]
+                            target = self.ranges[target]
+                            source = instr.args[1][1]
+                            source = self.ranges[source]["pointee"]
+                            source = self.ranges[source]
+                            length = instr.args[2][1]
+                            length = self.ranges[length]["value"]
+                            
+                            if length[1] > len(target["value"]) or length[1] > len(source["value"]):
+                                return "buffer overflow"
+                            
+                            # Copy values from source to target
+                            for i in range(length[0], length[1] + 1):
+                                target["value"][i] = source["value"][i]
+                        except:
+                            pass
+
+                    elif func_name == "fgets":
+                        buffer = instr.args[0][1]
+                        buffer = self.ranges[buffer]
+                        max_size = instr.args[1][1]
+                        try:
+                            max_size = int(max_size)
+                            max_size = [max_size,max_size]
+                        except:
+                            max_size = self.ranges[max_size]["value"]
+                        
+                        if max_size[1] > len(buffer["value"]):
+                            return "buffer overflow"
+                        
+                        # Assume fgets can read any ASCII character
+                        for i in range(max_size[1]):
+                            buffer["value"][i] = [0, 127]  # ASCII range
+                        
+                        # Mark last character as null terminator
+                        buffer["value"][max_size[1] - 1] = [0, 0]
+
+                    elif func_name == "rand":
+                        # Typically, rand() returns a pseudo-random integer between 0 and RAND_MAX
+                        # In most implementations, RAND_MAX is 32767
+                        self.ranges[instr.dest] = {"type": "i32", "value": [0, self.max_abs_val]}
                 elif isinstance(instr, Return):
                     # Return ends interpretation with the range of the return value
                     ret_range = (
@@ -1268,10 +1390,14 @@ class AbstractInterpreter:
                         if "pointee" in self.ranges[instr.ret_value]:
                             ptr = self.ranges[instr.ret_value]["pointee"]
                             if self.ranges[ptr]["type"] == "ptr":
-                                print(f"Return: {ret_range}")
-                                return ret_range  # End interpretation
+                                #print(f"Return: {ret_range}")
+                                return "ok"  # End interpretation
                             else:
                                 return "return of pointer outside expected range"
+                        else:
+                            return "ok"
+                    else:
+                        return "ok"
                 else:
                     print(f"CANT PARSE {instr}")
                 self.instruction_count += 1
@@ -1300,18 +1426,36 @@ class AbstractInterpreter:
 
 
 # Usage
-c_file = "simpleTB/simple6.c"
-target_function ="doubleFree"
-code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
-parser = IRParser(code[0][target_function], code[1])
-blocks = parser.parse()
+c_file_functions = get_c_file_functions('simpleTB')
+#for c_file, functions in c_file_functions.items():
+#    print(f"{c_file}: {', '.join(functions)}")
 
-for block_label, block in blocks.items():
-    print(f"Block {block_label}:")
-    print(f"  Instructions: {block.instructions}")
-    print(f"  Predecessors: {block.predecessors}")
-    print(f"  Successors: {block.successors}")
 
+
+for c_file, functions in c_file_functions.items():
+
+    c_file = c_file
+    for function in functions:
+        #print(function, c_file)
+        target_function = function
+        code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
+        parser = IRParser(code[0][target_function], code[1])
+        blocks = parser.parse()
+        interpreter = AbstractInterpreter(blocks, code[1])
+        try:
+            ret = interpreter.interpret()
+            print(f"{c_file} : {function} -> {ret}")
+        except:
+            print(f"{c_file} : {function} -> ERROR")
+
+
+#for block_label, block in blocks.items():
+#    print(f"Block {block_label}:")
+#    print(f"  Instructions: {block.instructions}")
+#    print(f"  Predecessors: {block.predecessors}")
+#    print(f"  Successors: {block.successors}")
+
+"""
 # Assuming `blocks` is already defined and populated
 dfa = DataFlowAnalysis(blocks)
 
@@ -1340,7 +1484,7 @@ print(ret)
 
 ret = dfa.analyze_pointers()
 print(ret)
-
+"""
 
 
 
