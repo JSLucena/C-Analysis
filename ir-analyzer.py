@@ -6,7 +6,9 @@ from typing import Optional, List, Dict, Set
 from dataclasses import dataclass
 from z3 import *
 import networkx as nx
-
+from collections import defaultdict
+import json
+from tqdm import tqdm
 def get_c_file_functions(directory):
     c_file_functions = {}
     for root, dirs, files in os.walk(directory):
@@ -16,7 +18,7 @@ def get_c_file_functions(directory):
                 functions = get_function_names(c_file)
                 c_file_functions[c_file] = functions
     return c_file_functions
-EXCLUDED_FUNCTIONS = ['main','realloc', 'sizeof','malloc', 'free', 'printf', 'scanf', 'fopen', 'fclose', 'memcpy', 'memset', 'strcpy', 'strncpy', 'strlen', 'rand', 'srand']
+EXCLUDED_FUNCTIONS = ['helper_good','main','wcslen','wcsncpy', 'wcscpy','accept','recv','RAND32', 'fscanf','inet_addr','memmove', 'htons','socket','comment', 'atoi','fgets', 'good', 'bad','realloc', 'sizeof','malloc', 'free', 'printf', 'scanf', 'fopen', 'fclose', 'memcpy', 'memset', 'strcpy', 'strncpy', 'strlen', 'rand', 'srand']
 def get_function_names(c_file):
     function_names = []
     with open(c_file, 'r') as file:
@@ -26,7 +28,11 @@ def get_function_names(c_file):
             f = func.split()[1]
             function_name_only = f.split("(")[0]
             if function_name_only not in EXCLUDED_FUNCTIONS:
-                function_names.append(function_name_only)
+                fname = c_file.split("/")[-1][:-2] 
+                if fname in function_name_only and "good" in function_name_only:
+                    pass
+                else:
+                    function_names.append(function_name_only)
     return function_names
 
 
@@ -83,8 +89,23 @@ def analyze_ir(ir_file_path, target_function):
       #print(f"  Parameters: {function_params}")
       #print(f"  IR:\n{function_ir}\n")
 
+
+
   if not function_data:
-    print(f"Function '{target_function}' not found in IR.")
+     # Use re.finditer for all matches
+    pattern = r"define internal (\S*) @([a-zA-Z0-9_]+)\((.*?)\) #0 \{([\s\S]*?)\}"
+    matches = re.finditer(pattern, ir_content, re.DOTALL)
+
+    function_data = {}  # Dictionary to store results
+
+    for match in matches:
+        if match.group(2) == target_function:  # Check if function name matches target
+            function_name = match.group(2)
+            function_params = match.group(3)
+            function_ir = match.group(4)
+            function_data[function_name] = function_ir
+    if not function_data:
+        print(f"Function '{target_function}' not found in IR.")
 
   return [function_data, function_params]
        
@@ -315,13 +336,18 @@ class IRParser:
         store_match = re.match(r"store (.+?) (%\w+), (.+?) (%\w+)", line)
         if store_match:
             op_type = store_match.group(1)
+            
             src = store_match.group(2)
+            if src == "null":
+                src = None
             dest = store_match.group(4)
             return Store(src, dest, op_type)
         store_match = re.match(r"store (.+?) (\w+), (.+?) (%\w+)", line)
         if store_match:
             op_type = store_match.group(1)
             src = store_match.group(2)
+            if src == "null":
+                src = None
             dest = store_match.group(4)
             return Store(src, dest, op_type)
 
@@ -380,6 +406,8 @@ class IRParser:
             op_type = cmp_match.group(2)
             operand1 = cmp_match.group(5)
             operand2 = cmp_match.group(6)
+            if operand2 == "null":
+                operand2 = None
             return Comparison(operation, dest, operand1, operand2, op_type)
         cmp_match = re.match(r"(%\w+) = (icmp|fcmp) (.+?) (.+?) (%\w+), (\w+)", line)
         if cmp_match:
@@ -389,6 +417,8 @@ class IRParser:
             src_type = cmp_match.group(4)
             operand1 = cmp_match.group(5)
             operand2 = cmp_match.group(6)
+            if operand2 == "null":
+                operand2 = None
             return Comparison(operation, dest, operand1, operand2, op_type)
         cmp_match = re.match(r"(%\w+) = (icmp|fcmp) (.+?) (.+?) (\w+), (\w+)", line)
         if cmp_match:
@@ -398,6 +428,8 @@ class IRParser:
             src_type = cmp_match.group(4)
             operand1 = cmp_match.group(5)
             operand2 = cmp_match.group(6)
+            if operand2 == "null":
+                operand2 = None
             return Comparison(operation, dest, operand1, operand2, op_type)
 
         # Match Alloca instructions
@@ -1042,6 +1074,8 @@ class AbstractInterpreter:
                         src = int(instr.src)
                     except:
                         src = instr.src
+                        #if src == "null":
+                        #    src = 0
                     if self.ranges[instr.dest]["type"] != "ptr":
                         if isinstance(src, int):
                             self.ranges[instr.dest]["value"] = [src, src]
@@ -1146,16 +1180,20 @@ class AbstractInterpreter:
                         op2_range = [op2,op2]
                     except:
                         op2_range = self.ranges.get(instr.operand2, [0, 0])
-                        if instr.operand2 == "null":
+                        if instr.operand2 == None:
                             op2_range = [0,0]
                         else:
                             op2_range = op2_range["value"]
 
-
+                    try:
+                        if isinstance(op1_range[0],list):
+                            op1_range = [len(op1_range),len(op1_range)]
+                    except:
+                        op1_range = op1_range
                     def ranges_overlap(r1, r2):
                         return not (r1[1] < r2[0] or r2[1] < r1[0])
                     
-                    if instr.operation == "seq":  # ==
+                    if instr.operation == "seq" or instr.operation == "eq":  # ==
                         if op1_range == op2_range:
                             # Same single-value range, definitely equal
                             result = [1, 1]
@@ -1176,28 +1214,28 @@ class AbstractInterpreter:
                         else:
                             # Ranges overlap, might be unequal
                             result =  [0, 1]
-                    elif instr.operation == "slt":
+                    elif instr.operation == "slt" or instr.operation == "ult":
                         if op1_range[1] < op2_range[0]:
                             result =  [1, 1]
                         elif op1_range[0] >= op2_range[1]:
                             result =  [0, 0]
                         else:
                             result =  [0, 1]
-                    elif instr.operation == "sle":
+                    elif instr.operation == "sle" or instr.operation == "ule":
                         if op1_range[1] < op2_range[0]:
                             result =  [1, 1]
                         elif op1_range[0] > op2_range[1]:
                             result =  [0, 0]
                         else:
                             result =  [0, 1]
-                    elif instr.operation == "sgt":
+                    elif instr.operation == "sgt" or instr.operation == "ugt":
                         if op1_range[0] > op2_range[1]:
                             result =  [1, 1]
                         elif op1_range[1] <= op2_range[0]:
                             result =  [0, 0]
                         else:
                             result =  [0, 1]
-                    elif instr.operation == "sge":
+                    elif instr.operation == "sge" or instr.operation == "uge":
                         if op1_range[0] > op2_range[1]:
                             result =  [1, 1]
                         elif op1_range[1] < op2_range[0]:
@@ -1379,6 +1417,8 @@ class AbstractInterpreter:
                         # Typically, rand() returns a pseudo-random integer between 0 and RAND_MAX
                         # In most implementations, RAND_MAX is 32767
                         self.ranges[instr.dest] = {"type": "i32", "value": [0, self.max_abs_val]}
+                    elif func_name == "exit":
+                        return instr.args[0][1]
                 elif isinstance(instr, Return):
                     # Return ends interpretation with the range of the return value
                     ret_range = (
@@ -1412,6 +1452,40 @@ class AbstractInterpreter:
                         print("No more successors; ending interpretation.")
                         break
 
+# Simulate extracting code complexity levels
+def extract_code_complexity(c_file):
+    """
+    Extract code complexity level from JULIET test cases based on filename.
+    The complexity is indicated by the number before the file extension.
+    Example: *_01.c has complexity 1
+    
+    Args:
+        c_file (str): Path to the C source file
+        
+    Returns:
+        int: Complexity level (1-22)
+    """
+    try:
+        # Get just the filename from the path and split by '.'
+        filename = c_file.split('/')[-1]
+        # Get the part before '.c' and extract the last 2 digits
+        complexity = filename.split('_')[-1][:-2]
+        complexity = int(complexity)
+
+        return complexity
+    except:
+        return 1  # Return base complexity on error
+
+# Determine expected correctness based on function name
+def determine_expected_status(function_name):
+    if "bad" in function_name:
+        return "Vulnerable"
+    elif "good" in function_name:
+        return "Safe"
+    else:
+        # Default to "Vulnerable" if naming doesn't match convention
+        return "Vulnerable"
+
 
 
 #TODO Abstract Interpreter
@@ -1426,34 +1500,211 @@ class AbstractInterpreter:
 
 
 # Usage
-c_file_functions = get_c_file_functions('simpleTB')
+dir_names = [
+    'simpleTB',
+    'CWE121_Stack_Based_Buffer_Overflow',
+    'CWE122_Heap_Based_Buffer_Overflow',
+    'CWE124_Buffer_Underwrite',
+    'CWE126_Buffer_Overread',
+    'CWE127_Buffer_Underread',
+    'CWE415_Double_Free',
+    'CWE416_Use_After_Free'
+]
+# Initialize data structures
+results_by_cwe = defaultdict(lambda: defaultdict(dict))
+# Initialize overall data structures
+overall_confusion_matrix = {
+    "Vulnerable": {"Detected": 0, "Not Detected": 0, "Error": 0},
+    "Safe": {"Detected": 0, "Not Detected": 0, "Error": 0},
+}
+# Per-directory data structures
+confusion_matrix_by_cwe = defaultdict(lambda: {
+    "Vulnerable": {"Detected": 0, "Not Detected": 0, "Error": 0},
+    "Safe": {"Detected": 0, "Not Detected": 0, "Error": 0},
+})
+# Updated data structure for complexity results
+overall_complexity_results = defaultdict(
+    lambda: {"Vulnerable": {"Detected": 0, "Not Detected": 0, "Error": 0},
+             "Safe": {"Detected": 0, "Not Detected": 0, "Error": 0}}
+)
+complexity_results_by_cwe = defaultdict(
+    lambda: defaultdict(
+        lambda: {"Vulnerable": {"Detected": 0, "Not Detected": 0, "Error": 0},
+                 "Safe": {"Detected": 0, "Not Detected": 0, "Error": 0}}
+    )
+)
+
+# Initialize data structures
+results_by_cwe_da = defaultdict(lambda: defaultdict(dict))
+# Initialize overall data structures
+overall_confusion_matrix_da = {
+    "Vulnerable": {"Detected": 0, "Not Detected": 0, "Error": 0},
+    "Safe": {"Detected": 0, "Not Detected": 0, "Error": 0},
+}
+# Per-directory data structures
+confusion_matrix_by_cwe_da = defaultdict(lambda: {
+    "Vulnerable": {"Detected": 0, "Not Detected": 0, "Error": 0},
+    "Safe": {"Detected": 0, "Not Detected": 0, "Error": 0},
+})
+# Updated data structure for complexity results
+overall_complexity_results_da = defaultdict(
+    lambda: {"Vulnerable": {"Detected": 0, "Not Detected": 0, "Error": 0},
+             "Safe": {"Detected": 0, "Not Detected": 0, "Error": 0}}
+)
+complexity_results_by_cwe_da = defaultdict(
+    lambda: defaultdict(
+        lambda: {"Vulnerable": {"Detected": 0, "Not Detected": 0, "Error": 0},
+                 "Safe": {"Detected": 0, "Not Detected": 0, "Error": 0}}
+    )
+)
+
+#c_file_functions = get_c_file_functions('CWE121_Stack_Based_Buffer_Overflow')
 #for c_file, functions in c_file_functions.items():
 #    print(f"{c_file}: {', '.join(functions)}")
+"""
+c_file = "CWE416_Use_After_Free/CWE416_Use_After_Free__malloc_free_long_01.c"
+target_function ="CWE416_Use_After_Free__malloc_free_long_01_bad"
+code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
+parser = IRParser(code[0][target_function], code[1])
+blocks = parser.parse()
+interpreter = AbstractInterpreter(blocks, code[1])
+ret = interpreter.interpret()
+print(ret)
 
+"""
 
+for directory in tqdm(dir_names, desc="Processing Directories"):
+    c_file_functions = get_c_file_functions(directory)
 
-for c_file, functions in c_file_functions.items():
+    for c_file, functions in tqdm(c_file_functions.items(), desc=f"Processing Files in {directory}", leave=False):
 
-    c_file = c_file
-    for function in functions:
-        #print(function, c_file)
-        target_function = function
-        code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
-        parser = IRParser(code[0][target_function], code[1])
-        blocks = parser.parse()
-        interpreter = AbstractInterpreter(blocks, code[1])
-        try:
-            ret = interpreter.interpret()
-            print(f"{c_file} : {function} -> {ret}")
-        except:
-            print(f"{c_file} : {function} -> ERROR")
+        c_file = c_file
+        for function in functions:
+            #print(function, c_file)
+            target_function = function
+            code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
+            parser = IRParser(code[0][target_function], code[1])
+            blocks = parser.parse()
+            interpreter = AbstractInterpreter(blocks, code[1])
+            try:
+                ret = interpreter.interpret()
+                # Determine expected status (Vulnerable or Safe)
+                expected_status = determine_expected_status(function)
+                 # Determine detection result
+                detection_status = "Detected" if ret != "ok" else "Not Detected"
+                 # Overall results
+                overall_confusion_matrix[expected_status][detection_status] += 1
+                # Extract code complexity
+                complexity = extract_code_complexity(c_file)
+                overall_complexity_results[complexity][expected_status][detection_status] += 1
 
+                # Update per-directory results
+                confusion_matrix_by_cwe[directory][expected_status][detection_status] += 1
+                complexity_results_by_cwe[directory][complexity][expected_status][detection_status] += 1
+                #print(f"{c_file} : {function} -> {ret}")
+            except:
+                expected_status = determine_expected_status(function)
 
+                # Overall error handling
+                overall_confusion_matrix[expected_status]["Error"] += 1
+                # Extract code complexity
+                complexity = extract_code_complexity(c_file)
+                overall_complexity_results[complexity][expected_status]["Error"] += 1
+
+                # Update per-directory error results
+                confusion_matrix_by_cwe[directory][expected_status]["Error"] += 1
+                complexity_results_by_cwe[directory][complexity][expected_status]["Error"] += 1
+                #print(f"{c_file} : {function} -> ERROR")
+
+# Assume your dictionaries are named as below:
+results = {
+    "overall_confusion_matrix": overall_confusion_matrix,
+    "overall_complexity_results": overall_complexity_results,
+    "confusion_matrix_by_cwe": confusion_matrix_by_cwe,
+    "complexity_results_by_cwe": complexity_results_by_cwe,
+    "results_by_cwe": results_by_cwe_da
+}
+
+# Save results to a JSON file
+with open("abstract_interpreter_results.json", "w") as json_file:
+    json.dump(results, json_file, indent=4)
 #for block_label, block in blocks.items():
 #    print(f"Block {block_label}:")
 #    print(f"  Instructions: {block.instructions}")
 #    print(f"  Predecessors: {block.predecessors}")
 #    print(f"  Successors: {block.successors}")
+
+for directory in tqdm(dir_names, desc="Processing Directories"):
+    c_file_functions = get_c_file_functions(directory)
+
+    for c_file, functions in tqdm(c_file_functions.items(), desc=f"Processing Files in {directory}", leave=False):
+        for function in functions:
+            #print(function, c_file)
+            target_function = function
+            code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
+            parser = IRParser(code[0][target_function], code[1])
+            blocks = parser.parse()
+            try:
+
+                dfa = DataFlowAnalysis(blocks)
+
+                # Run Reaching Definitions Analysis
+                dfa.reaching_definitions_analysis()
+
+                # Run Constant Propagation Analysis
+                dfa.constant_propagation_analysis()
+
+                dfa.live_variables_analysis()
+                dfa.available_expressions_analysis()
+
+                dfa.get_array_declarations()
+                dfa.get_array_assignments()
+                dfa.detect_cycles()
+                dfa.get_array_index()
+                dfa.get_loop_bound()
+                dfa.get_pointers()
+                dfa.get_mallocs()
+                dfa.get_pointer_assignments()
+                dfa.display_results()
+                ret = dfa.analyze_array_access()
+                # Determine expected status (Vulnerable or Safe)
+                expected_status = determine_expected_status(function)
+                 # Determine detection result
+                detection_status = "Detected" if ret != "ok" else "Not Detected"
+                 # Overall results
+                overall_confusion_matrix_da[expected_status][detection_status] += 1
+                # Extract code complexity
+                complexity = extract_code_complexity(c_file)
+                overall_complexity_results_da[complexity][expected_status][detection_status] += 1
+
+                # Update per-directory results
+                confusion_matrix_by_cwe_da[directory][expected_status][detection_status] += 1
+                complexity_results_by_cwe_da[directory][complexity][expected_status][detection_status] += 1
+            except:
+                expected_status = determine_expected_status(function)
+
+                # Overall error handling
+                overall_confusion_matrix_da[expected_status]["Error"] += 1
+                # Extract code complexity
+                complexity = extract_code_complexity(c_file)
+                overall_complexity_results_da[complexity][expected_status]["Error"] += 1
+
+                # Update per-directory error results
+                confusion_matrix_by_cwe_da[directory][expected_status]["Error"] += 1
+                complexity_results_by_cwe_da[directory][complexity][expected_status]["Error"] += 1
+
+# Assume your dictionaries are named as below:
+results = {
+    "overall_confusion_matrix": overall_confusion_matrix_da,
+    "overall_complexity_results": overall_complexity_results_da,
+    "confusion_matrix_by_cwe": confusion_matrix_by_cwe_da,
+    "complexity_results_by_cwe": complexity_results_by_cwe_da,
+    "results_by_cwe": results_by_cwe_da
+}
+
+# Save results to a JSON file
+with open("da_results.json", "w") as json_file:
+    json.dump(results, json_file, indent=4)
 
 """
 # Assuming `blocks` is already defined and populated
@@ -1486,8 +1737,24 @@ ret = dfa.analyze_pointers()
 print(ret)
 """
 
+# Summary printing
+print("\n=== Overall Confusion Matrix ===")
+for actual, predictions in overall_confusion_matrix_da.items():
+    print(f"{actual}: {predictions}")
 
+print("\n=== Overall Complexity Results ===")
+for level, stats in overall_complexity_results_da.items():
+    print(f"Complexity Level {level}: {stats}")
 
-#interpreter = AbstractInterpreter(blocks, code[1])
-#ret = interpreter.interpret()
-#print(ret)
+print("\n=== Per-Directory Confusion Matrices ===")
+for cwe, matrix in confusion_matrix_by_cwe_da.items():
+    print(f"{cwe}:")
+    for actual, predictions in matrix.items():
+        print(f"  {actual}: {predictions}")
+
+print("\n=== Per-Directory Complexity Results ===")
+for cwe, complexities in complexity_results_by_cwe_da.items():
+    print(f"{cwe}:")
+    for level, stats in complexities.items():
+        print(f"  Complexity Level {level}: {stats}")
+
