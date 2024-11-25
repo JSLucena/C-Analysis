@@ -1010,8 +1010,8 @@ class AbstractInterpreter:
     def __init__(self, blocks, params):
         self.blocks = blocks
         self.ranges = {}  # Store variable ranges as {var_name: [min, max]}
-        self.array_size_bounds = 8192
-        self.max_abs_val = 8192
+        self.array_size_bounds = 128
+        self.max_abs_val = 128
         self.instruction_count = 0
         self.requires_analysis = []
         params = params.split(",")
@@ -1287,10 +1287,12 @@ class AbstractInterpreter:
                         try:
                             size = int(instr.args[0][1])
                         except:
-                            size = self.ranges[instr.args[0][1]]["value"][1] #upper bound of range
+                            size = self.ranges[instr.args[0][1]]["value"] #upper bound of range
                         type_ = "ptr"
                         vals = []
-                        if size > self.array_size_bounds:
+                        if size[0] < 0:
+                            return "error allocating"
+                        if size[1] > self.array_size_bounds:
                             return "Analysis Error:Over maximum array size"
                         for i in range(int(size)):
                             vals.append([0,0])
@@ -1508,7 +1510,8 @@ dir_names = [
     'CWE126_Buffer_Overread',
     'CWE127_Buffer_Underread',
     'CWE415_Double_Free',
-    'CWE416_Use_After_Free'
+    'CWE416_Use_After_Free',
+    'CWE680_Integer_Overflow_to_Buffer_Overflow'
 ]
 # Initialize data structures
 results_by_cwe = defaultdict(lambda: defaultdict(dict))
@@ -1622,7 +1625,7 @@ results = {
     "overall_complexity_results": overall_complexity_results,
     "confusion_matrix_by_cwe": confusion_matrix_by_cwe,
     "complexity_results_by_cwe": complexity_results_by_cwe,
-    "results_by_cwe": results_by_cwe_da
+    "results_by_cwe": results_by_cwe
 }
 
 # Save results to a JSON file

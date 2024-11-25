@@ -1,0 +1,9 @@
+# Ignore CWE directories
+CWE121_Stack_Based_Buffer_Overflow/
+CWE122_Heap_Based_Buffer_Overflow/
+CWE124_Buffer_Underwrite/
+CWE126_Buffer_Overread/
+CWE127_Buffer_Underread/
+CWE415_Double_Free/
+CWE416_Use_After_Free/
+CWE680_Integer_Overflow_to_Buffer_Overflow/
