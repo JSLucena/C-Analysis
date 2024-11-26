@@ -4,7 +4,6 @@ import re
 from enum import Enum
 from typing import Optional, List, Dict, Set
 from dataclasses import dataclass
-from z3 import *
 import networkx as nx
 from collections import defaultdict
 import json
@@ -18,7 +17,7 @@ def get_c_file_functions(directory):
                 functions = get_function_names(c_file)
                 c_file_functions[c_file] = functions
     return c_file_functions
-EXCLUDED_FUNCTIONS = ['helper_good','main','wcslen','wcsncpy', 'wcscpy','accept','recv','RAND32', 'fscanf','inet_addr','memmove', 'htons','socket','comment', 'atoi','fgets', 'good', 'bad','realloc', 'sizeof','malloc', 'free', 'printf', 'scanf', 'fopen', 'fclose', 'memcpy', 'memset', 'strcpy', 'strncpy', 'strlen', 'rand', 'srand']
+EXCLUDED_FUNCTIONS = ['helper_good',"if","switch", 'while', 'globalReturnsTrue', 'globalReturnsFalse', 'main','wcslen','wcsncpy', 'wcscpy','accept','recv','RAND32', 'fscanf','inet_addr','memmove', 'htons','socket','comment', 'atoi','fgets', 'good', 'bad','realloc', 'sizeof','malloc', 'free', 'printf', 'scanf', 'fopen', 'fclose', 'memcpy', 'memset', 'strcpy', 'strncpy', 'strlen', 'rand', 'srand']
 def get_function_names(c_file):
     function_names = []
     with open(c_file, 'r') as file:
@@ -29,7 +28,7 @@ def get_function_names(c_file):
             function_name_only = f.split("(")[0]
             if function_name_only not in EXCLUDED_FUNCTIONS:
                 fname = c_file.split("/")[-1][:-2] 
-                if fname in function_name_only and "good" in function_name_only:
+                if fname in function_name_only and "good" in function_name_only and "G2B" not in function_name_only:
                     pass
                 else:
                     function_names.append(function_name_only)
@@ -105,7 +104,8 @@ def analyze_ir(ir_file_path, target_function):
             function_ir = match.group(4)
             function_data[function_name] = function_ir
     if not function_data:
-        print(f"Function '{target_function}' not found in IR.")
+        #print(f"Function '{target_function}' not found in IR.")
+        pass
 
   return [function_data, function_params]
        
@@ -1476,7 +1476,7 @@ def extract_code_complexity(c_file):
 
         return complexity
     except:
-        return 1  # Return base complexity on error
+        return -1  # Return base complexity on error
 
 # Determine expected correctness based on function name
 def determine_expected_status(function_name):
@@ -1585,11 +1585,12 @@ for directory in tqdm(dir_names, desc="Processing Directories"):
         for function in functions:
             #print(function, c_file)
             target_function = function
-            code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
-            parser = IRParser(code[0][target_function], code[1])
-            blocks = parser.parse()
-            interpreter = AbstractInterpreter(blocks, code[1])
+            
             try:
+                code = generate_and_analyze_ir(c_file, analyze_ir, target_function)
+                parser = IRParser(code[0][target_function], code[1])
+                blocks = parser.parse()
+                interpreter = AbstractInterpreter(blocks, code[1])
                 ret = interpreter.interpret()
                 # Determine expected status (Vulnerable or Safe)
                 expected_status = determine_expected_status(function)
@@ -1636,7 +1637,7 @@ with open("abstract_interpreter_results.json", "w") as json_file:
 #    print(f"  Instructions: {block.instructions}")
 #    print(f"  Predecessors: {block.predecessors}")
 #    print(f"  Successors: {block.successors}")
-
+"""
 for directory in tqdm(dir_names, desc="Processing Directories"):
     c_file_functions = get_c_file_functions(directory)
 
@@ -1709,7 +1710,7 @@ results = {
 with open("da_results.json", "w") as json_file:
     json.dump(results, json_file, indent=4)
 
-"""
+
 # Assuming `blocks` is already defined and populated
 dfa = DataFlowAnalysis(blocks)
 
@@ -1739,25 +1740,4 @@ print(ret)
 ret = dfa.analyze_pointers()
 print(ret)
 """
-
-# Summary printing
-print("\n=== Overall Confusion Matrix ===")
-for actual, predictions in overall_confusion_matrix_da.items():
-    print(f"{actual}: {predictions}")
-
-print("\n=== Overall Complexity Results ===")
-for level, stats in overall_complexity_results_da.items():
-    print(f"Complexity Level {level}: {stats}")
-
-print("\n=== Per-Directory Confusion Matrices ===")
-for cwe, matrix in confusion_matrix_by_cwe_da.items():
-    print(f"{cwe}:")
-    for actual, predictions in matrix.items():
-        print(f"  {actual}: {predictions}")
-
-print("\n=== Per-Directory Complexity Results ===")
-for cwe, complexities in complexity_results_by_cwe_da.items():
-    print(f"{cwe}:")
-    for level, stats in complexities.items():
-        print(f"  Complexity Level {level}: {stats}")
 

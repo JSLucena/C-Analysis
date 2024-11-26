@@ -1320,7 +1320,7 @@ def extract_code_complexity(c_file):
         numeric_complexity = int(re.search(r'\d+', complexity).group())
         return numeric_complexity
     except:
-        return 1  # Return base complexity on error
+        return -1  # Return base complexity on error
 
 # Determine expected correctness based on function name
 def determine_expected_status(function_name):

@@ -1,0 +1,2979 @@
+{
+    "overall_confusion_matrix": {
+        "Vulnerable": {
+            "Detected": 4594,
+            "Not Detected": 4754,
+            "Error": 14203
+        },
+        "Safe": {
+            "Detected": 7225,
+            "Not Detected": 10786,
+            "Error": 28802
+        }
+    },
+    "overall_complexity_results": {
+        "-1": {
+            "Vulnerable": {
+                "Detected": 2269,
+                "Not Detected": 3723,
+                "Error": 7232
+            },
+            "Safe": {
+                "Detected": 2044,
+                "Not Detected": 7760,
+                "Error": 9311
+            }
+        },
+        "14": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 310
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 1396
+            }
+        },
+        "21": {
+            "Vulnerable": {
+                "Detected": 47,
+                "Not Detected": 23,
+                "Error": 369
+            },
+            "Safe": {
+                "Detected": 188,
+                "Not Detected": 154,
+                "Error": 968
+            }
+        },
+        "32": {
+            "Vulnerable": {
+                "Detected": 127,
+                "Not Detected": 24,
+                "Error": 133
+            },
+            "Safe": {
+                "Detected": 260,
+                "Not Detected": 76,
+                "Error": 308
+            }
+        },
+        "31": {
+            "Vulnerable": {
+                "Detected": 126,
+                "Not Detected": 24,
+                "Error": 134
+            },
+            "Safe": {
+                "Detected": 242,
+                "Not Detected": 92,
+                "Error": 310
+            }
+        },
+        "6": {
+            "Vulnerable": {
+                "Detected": 134,
+                "Not Detected": 26,
+                "Error": 150
+            },
+            "Safe": {
+                "Detected": 516,
+                "Not Detected": 192,
+                "Error": 688
+            }
+        },
+        "2": {
+            "Vulnerable": {
+                "Detected": 134,
+                "Not Detected": 26,
+                "Error": 150
+            },
+            "Safe": {
+                "Detected": 516,
+                "Not Detected": 192,
+                "Error": 688
+            }
+        },
+        "8": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 1588
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 1396
+            }
+        },
+        "18": {
+            "Vulnerable": {
+                "Detected": 134,
+                "Not Detected": 26,
+                "Error": 149
+            },
+            "Safe": {
+                "Detected": 258,
+                "Not Detected": 96,
+                "Error": 344
+            }
+        },
+        "41": {
+            "Vulnerable": {
+                "Detected": 200,
+                "Not Detected": 210,
+                "Error": 158
+            },
+            "Safe": {
+                "Detected": 183,
+                "Not Detected": 291,
+                "Error": 170
+            }
+        },
+        "44": {
+            "Vulnerable": {
+                "Detected": 200,
+                "Not Detected": 210,
+                "Error": 158
+            },
+            "Safe": {
+                "Detected": 204,
+                "Not Detected": 480,
+                "Error": 282
+            }
+        },
+        "13": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 310
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 1396
+            }
+        },
+        "1": {
+            "Vulnerable": {
+                "Detected": 134,
+                "Not Detected": 26,
+                "Error": 149
+            },
+            "Safe": {
+                "Detected": 129,
+                "Not Detected": 48,
+                "Error": 172
+            }
+        },
+        "4": {
+            "Vulnerable": {
+                "Detected": 134,
+                "Not Detected": 26,
+                "Error": 150
+            },
+            "Safe": {
+                "Detected": 516,
+                "Not Detected": 192,
+                "Error": 688
+            }
+        },
+        "15": {
+            "Vulnerable": {
+                "Detected": 134,
+                "Not Detected": 26,
+                "Error": 150
+            },
+            "Safe": {
+                "Detected": 516,
+                "Not Detected": 192,
+                "Error": 688
+            }
+        },
+        "34": {
+            "Vulnerable": {
+                "Detected": 121,
+                "Not Detected": 29,
+                "Error": 134
+            },
+            "Safe": {
+                "Detected": 248,
+                "Not Detected": 86,
+                "Error": 310
+            }
+        },
+        "16": {
+            "Vulnerable": {
+                "Detected": 134,
+                "Not Detected": 26,
+                "Error": 149
+            },
+            "Safe": {
+                "Detected": 258,
+                "Not Detected": 96,
+                "Error": 344
+            }
+        },
+        "10": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 310
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 1396
+            }
+        },
+        "12": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 311
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 698
+            }
+        },
+        "45": {
+            "Vulnerable": {
+                "Detected": 209,
+                "Not Detected": 169,
+                "Error": 190
+            },
+            "Safe": {
+                "Detected": 213,
+                "Not Detected": 439,
+                "Error": 314
+            }
+        },
+        "7": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 310
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 1396
+            }
+        },
+        "3": {
+            "Vulnerable": {
+                "Detected": 134,
+                "Not Detected": 26,
+                "Error": 150
+            },
+            "Safe": {
+                "Detected": 516,
+                "Not Detected": 192,
+                "Error": 688
+            }
+        },
+        "17": {
+            "Vulnerable": {
+                "Detected": 145,
+                "Not Detected": 0,
+                "Error": 164
+            },
+            "Safe": {
+                "Detected": 318,
+                "Not Detected": 0,
+                "Error": 380
+            }
+        },
+        "11": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 310
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 1396
+            }
+        },
+        "9": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 310
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 1396
+            }
+        },
+        "5": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 310
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 1396
+            }
+        },
+        "42": {
+            "Vulnerable": {
+                "Detected": 78,
+                "Not Detected": 134,
+                "Error": 265
+            },
+            "Safe": {
+                "Detected": 100,
+                "Not Detected": 208,
+                "Error": 283
+            }
+        }
+    },
+    "confusion_matrix_by_cwe": {
+        "simpleTB": {
+            "Vulnerable": {
+                "Detected": 15,
+                "Not Detected": 2,
+                "Error": 9
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 0,
+                "Error": 0
+            }
+        },
+        "CWE121_Stack_Based_Buffer_Overflow": {
+            "Vulnerable": {
+                "Detected": 2058,
+                "Not Detected": 2588,
+                "Error": 4156
+            },
+            "Safe": {
+                "Detected": 3873,
+                "Not Detected": 4687,
+                "Error": 7862
+            }
+        },
+        "CWE122_Heap_Based_Buffer_Overflow": {
+            "Vulnerable": {
+                "Detected": 496,
+                "Not Detected": 689,
+                "Error": 4463
+            },
+            "Safe": {
+                "Detected": 664,
+                "Not Detected": 1603,
+                "Error": 8809
+            }
+        },
+        "CWE124_Buffer_Underwrite": {
+            "Vulnerable": {
+                "Detected": 810,
+                "Not Detected": 430,
+                "Error": 1612
+            },
+            "Safe": {
+                "Detected": 989,
+                "Not Detected": 1451,
+                "Error": 3284
+            }
+        },
+        "CWE126_Buffer_Overread": {
+            "Vulnerable": {
+                "Detected": 315,
+                "Not Detected": 399,
+                "Error": 1326
+            },
+            "Safe": {
+                "Detected": 747,
+                "Not Detected": 921,
+                "Error": 2778
+            }
+        },
+        "CWE127_Buffer_Underread": {
+            "Vulnerable": {
+                "Detected": 827,
+                "Not Detected": 456,
+                "Error": 1569
+            },
+            "Safe": {
+                "Detected": 896,
+                "Not Detected": 1655,
+                "Error": 3173
+            }
+        },
+        "CWE415_Double_Free": {
+            "Vulnerable": {
+                "Detected": 0,
+                "Not Detected": 102,
+                "Error": 420
+            },
+            "Safe": {
+                "Detected": 0,
+                "Not Detected": 204,
+                "Error": 1410
+            }
+        },
+        "CWE416_Use_After_Free": {
+            "Vulnerable": {
+                "Detected": 1,
+                "Not Detected": 20,
+                "Error": 266
+            },
+            "Safe": {
+                "Detected": 2,
+                "Not Detected": 49,
+                "Error": 814
+            }
+        },
+        "CWE680_Integer_Overflow_to_Buffer_Overflow": {
+            "Vulnerable": {
+                "Detected": 72,
+                "Not Detected": 68,
+                "Error": 382
+            },
+            "Safe": {
+                "Detected": 54,
+                "Not Detected": 216,
+                "Error": 672
+            }
+        }
+    },
+    "complexity_results_by_cwe": {
+        "simpleTB": {
+            "-1": {
+                "Vulnerable": {
+                    "Detected": 15,
+                    "Not Detected": 2,
+                    "Error": 9
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 0
+                }
+            }
+        },
+        "CWE121_Stack_Based_Buffer_Overflow": {
+            "-1": {
+                "Vulnerable": {
+                    "Detected": 904,
+                    "Not Detected": 1884,
+                    "Error": 2221
+                },
+                "Safe": {
+                    "Detected": 943,
+                    "Not Detected": 3192,
+                    "Error": 2661
+                }
+            },
+            "14": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 116
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 492
+                }
+            },
+            "21": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 8,
+                    "Error": 91
+                },
+                "Safe": {
+                    "Detected": 44,
+                    "Not Detected": 46,
+                    "Error": 229
+                }
+            },
+            "32": {
+                "Vulnerable": {
+                    "Detected": 74,
+                    "Not Detected": 20,
+                    "Error": 18
+                },
+                "Safe": {
+                    "Detected": 160,
+                    "Not Detected": 40,
+                    "Error": 38
+                }
+            },
+            "31": {
+                "Vulnerable": {
+                    "Detected": 71,
+                    "Not Detected": 22,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 148,
+                    "Not Detected": 50,
+                    "Error": 40
+                }
+            },
+            "6": {
+                "Vulnerable": {
+                    "Detected": 75,
+                    "Not Detected": 22,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 312,
+                    "Not Detected": 100,
+                    "Error": 80
+                }
+            },
+            "2": {
+                "Vulnerable": {
+                    "Detected": 75,
+                    "Not Detected": 22,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 312,
+                    "Not Detected": 100,
+                    "Error": 80
+                }
+            },
+            "8": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 586
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 492
+                }
+            },
+            "18": {
+                "Vulnerable": {
+                    "Detected": 75,
+                    "Not Detected": 22,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 156,
+                    "Not Detected": 50,
+                    "Error": 40
+                }
+            },
+            "41": {
+                "Vulnerable": {
+                    "Detected": 76,
+                    "Not Detected": 128,
+                    "Error": 20
+                },
+                "Safe": {
+                    "Detected": 82,
+                    "Not Detected": 135,
+                    "Error": 21
+                }
+            },
+            "44": {
+                "Vulnerable": {
+                    "Detected": 76,
+                    "Not Detected": 128,
+                    "Error": 20
+                },
+                "Safe": {
+                    "Detected": 99,
+                    "Not Detected": 234,
+                    "Error": 24
+                }
+            },
+            "13": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 116
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 492
+                }
+            },
+            "1": {
+                "Vulnerable": {
+                    "Detected": 75,
+                    "Not Detected": 22,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 78,
+                    "Not Detected": 25,
+                    "Error": 20
+                }
+            },
+            "4": {
+                "Vulnerable": {
+                    "Detected": 75,
+                    "Not Detected": 22,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 312,
+                    "Not Detected": 100,
+                    "Error": 80
+                }
+            },
+            "15": {
+                "Vulnerable": {
+                    "Detected": 75,
+                    "Not Detected": 22,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 312,
+                    "Not Detected": 100,
+                    "Error": 80
+                }
+            },
+            "34": {
+                "Vulnerable": {
+                    "Detected": 68,
+                    "Not Detected": 25,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 148,
+                    "Not Detected": 50,
+                    "Error": 40
+                }
+            },
+            "16": {
+                "Vulnerable": {
+                    "Detected": 75,
+                    "Not Detected": 22,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 156,
+                    "Not Detected": 50,
+                    "Error": 40
+                }
+            },
+            "10": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 116
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 492
+                }
+            },
+            "12": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 116
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 246
+                }
+            },
+            "45": {
+                "Vulnerable": {
+                    "Detected": 82,
+                    "Not Detected": 122,
+                    "Error": 20
+                },
+                "Safe": {
+                    "Detected": 105,
+                    "Not Detected": 228,
+                    "Error": 24
+                }
+            },
+            "7": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 116
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 492
+                }
+            },
+            "3": {
+                "Vulnerable": {
+                    "Detected": 75,
+                    "Not Detected": 22,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 312,
+                    "Not Detected": 100,
+                    "Error": 80
+                }
+            },
+            "17": {
+                "Vulnerable": {
+                    "Detected": 78,
+                    "Not Detected": 0,
+                    "Error": 38
+                },
+                "Safe": {
+                    "Detected": 170,
+                    "Not Detected": 0,
+                    "Error": 76
+                }
+            },
+            "11": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 116
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 492
+                }
+            },
+            "9": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 116
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 492
+                }
+            },
+            "5": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 116
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 492
+                }
+            },
+            "42": {
+                "Vulnerable": {
+                    "Detected": 18,
+                    "Not Detected": 75,
+                    "Error": 24
+                },
+                "Safe": {
+                    "Detected": 24,
+                    "Not Detected": 87,
+                    "Error": 27
+                }
+            }
+        },
+        "CWE122_Heap_Based_Buffer_Overflow": {
+            "-1": {
+                "Vulnerable": {
+                    "Detected": 347,
+                    "Not Detected": 603,
+                    "Error": 2243
+                },
+                "Safe": {
+                    "Detected": 412,
+                    "Not Detected": 1453,
+                    "Error": 2910
+                }
+            },
+            "17": {
+                "Vulnerable": {
+                    "Detected": 3,
+                    "Not Detected": 0,
+                    "Error": 65
+                },
+                "Safe": {
+                    "Detected": 18,
+                    "Not Detected": 0,
+                    "Error": 132
+                }
+            },
+            "8": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 346
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 300
+                }
+            },
+            "21": {
+                "Vulnerable": {
+                    "Detected": 22,
+                    "Not Detected": 2,
+                    "Error": 161
+                },
+                "Safe": {
+                    "Detected": 88,
+                    "Not Detected": 20,
+                    "Error": 411
+                }
+            },
+            "6": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 67
+                },
+                "Safe": {
+                    "Detected": 4,
+                    "Not Detected": 0,
+                    "Error": 296
+                }
+            },
+            "5": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 68
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 300
+                }
+            },
+            "42": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 36,
+                    "Error": 133
+                },
+                "Safe": {
+                    "Detected": 23,
+                    "Not Detected": 48,
+                    "Error": 142
+                }
+            },
+            "32": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 63
+                },
+                "Safe": {
+                    "Detected": 2,
+                    "Not Detected": 0,
+                    "Error": 140
+                }
+            },
+            "34": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 63
+                },
+                "Safe": {
+                    "Detected": 2,
+                    "Not Detected": 0,
+                    "Error": 140
+                }
+            },
+            "7": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 68
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 300
+                }
+            },
+            "9": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 68
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 300
+                }
+            },
+            "15": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 67
+                },
+                "Safe": {
+                    "Detected": 4,
+                    "Not Detected": 0,
+                    "Error": 296
+                }
+            },
+            "11": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 68
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 300
+                }
+            },
+            "12": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 68
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 150
+                }
+            },
+            "44": {
+                "Vulnerable": {
+                    "Detected": 29,
+                    "Not Detected": 23,
+                    "Error": 76
+                },
+                "Safe": {
+                    "Detected": 30,
+                    "Not Detected": 37,
+                    "Error": 146
+                }
+            },
+            "4": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 67
+                },
+                "Safe": {
+                    "Detected": 4,
+                    "Not Detected": 0,
+                    "Error": 296
+                }
+            },
+            "3": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 67
+                },
+                "Safe": {
+                    "Detected": 4,
+                    "Not Detected": 0,
+                    "Error": 296
+                }
+            },
+            "2": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 67
+                },
+                "Safe": {
+                    "Detected": 4,
+                    "Not Detected": 0,
+                    "Error": 296
+                }
+            },
+            "1": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 67
+                },
+                "Safe": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 74
+                }
+            },
+            "10": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 68
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 300
+                }
+            },
+            "16": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 67
+                },
+                "Safe": {
+                    "Detected": 2,
+                    "Not Detected": 0,
+                    "Error": 148
+                }
+            },
+            "31": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 63
+                },
+                "Safe": {
+                    "Detected": 2,
+                    "Not Detected": 0,
+                    "Error": 140
+                }
+            },
+            "41": {
+                "Vulnerable": {
+                    "Detected": 29,
+                    "Not Detected": 23,
+                    "Error": 76
+                },
+                "Safe": {
+                    "Detected": 29,
+                    "Not Detected": 29,
+                    "Error": 84
+                }
+            },
+            "18": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 67
+                },
+                "Safe": {
+                    "Detected": 2,
+                    "Not Detected": 0,
+                    "Error": 148
+                }
+            },
+            "45": {
+                "Vulnerable": {
+                    "Detected": 32,
+                    "Not Detected": 2,
+                    "Error": 94
+                },
+                "Safe": {
+                    "Detected": 33,
+                    "Not Detected": 16,
+                    "Error": 164
+                }
+            },
+            "14": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 68
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 300
+                }
+            },
+            "13": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 68
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 300
+                }
+            }
+        },
+        "CWE124_Buffer_Underwrite": {
+            "-1": {
+                "Vulnerable": {
+                    "Detected": 397,
+                    "Not Detected": 377,
+                    "Error": 860
+                },
+                "Safe": {
+                    "Detected": 246,
+                    "Not Detected": 1034,
+                    "Error": 1094
+                }
+            },
+            "7": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "13": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "44": {
+                "Vulnerable": {
+                    "Detected": 33,
+                    "Not Detected": 20,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 20,
+                    "Not Detected": 74,
+                    "Error": 32
+                }
+            },
+            "5": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "9": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "32": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 46,
+                    "Not Detected": 4,
+                    "Error": 34
+                }
+            },
+            "34": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 46,
+                    "Not Detected": 4,
+                    "Error": 34
+                }
+            },
+            "10": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "17": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 38,
+                    "Not Detected": 0,
+                    "Error": 46
+                }
+            },
+            "3": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 72,
+                    "Not Detected": 28,
+                    "Error": 68
+                }
+            },
+            "4": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 72,
+                    "Not Detected": 28,
+                    "Error": 68
+                }
+            },
+            "8": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 192
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "15": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 72,
+                    "Not Detected": 28,
+                    "Error": 68
+                }
+            },
+            "11": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "45": {
+                "Vulnerable": {
+                    "Detected": 48,
+                    "Not Detected": 5,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 35,
+                    "Not Detected": 59,
+                    "Error": 32
+                }
+            },
+            "2": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 72,
+                    "Not Detected": 28,
+                    "Error": 68
+                }
+            },
+            "16": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 36,
+                    "Not Detected": 14,
+                    "Error": 34
+                }
+            },
+            "6": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 72,
+                    "Not Detected": 28,
+                    "Error": 68
+                }
+            },
+            "1": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 18,
+                    "Not Detected": 7,
+                    "Error": 17
+                }
+            },
+            "12": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 84
+                }
+            },
+            "31": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 36,
+                    "Not Detected": 14,
+                    "Error": 34
+                }
+            },
+            "14": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "18": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 36,
+                    "Not Detected": 14,
+                    "Error": 34
+                }
+            },
+            "42": {
+                "Vulnerable": {
+                    "Detected": 15,
+                    "Not Detected": 5,
+                    "Error": 28
+                },
+                "Safe": {
+                    "Detected": 21,
+                    "Not Detected": 17,
+                    "Error": 28
+                }
+            },
+            "41": {
+                "Vulnerable": {
+                    "Detected": 33,
+                    "Not Detected": 20,
+                    "Error": 19
+                },
+                "Safe": {
+                    "Detected": 19,
+                    "Not Detected": 46,
+                    "Error": 19
+                }
+            },
+            "21": {
+                "Vulnerable": {
+                    "Detected": 8,
+                    "Not Detected": 3,
+                    "Error": 31
+                },
+                "Safe": {
+                    "Detected": 32,
+                    "Not Detected": 24,
+                    "Error": 78
+                }
+            }
+        },
+        "CWE126_Buffer_Overread": {
+            "-1": {
+                "Vulnerable": {
+                    "Detected": 149,
+                    "Not Detected": 307,
+                    "Error": 642
+                },
+                "Safe": {
+                    "Detected": 160,
+                    "Not Detected": 653,
+                    "Error": 861
+                }
+            },
+            "14": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 144
+                }
+            },
+            "21": {
+                "Vulnerable": {
+                    "Detected": 2,
+                    "Not Detected": 2,
+                    "Error": 26
+                },
+                "Safe": {
+                    "Detected": 8,
+                    "Not Detected": 20,
+                    "Error": 74
+                }
+            },
+            "6": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 3,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 16,
+                    "Error": 64
+                }
+            },
+            "3": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 3,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 16,
+                    "Error": 64
+                }
+            },
+            "45": {
+                "Vulnerable": {
+                    "Detected": 10,
+                    "Not Detected": 18,
+                    "Error": 20
+                },
+                "Safe": {
+                    "Detected": 17,
+                    "Not Detected": 44,
+                    "Error": 29
+                }
+            },
+            "17": {
+                "Vulnerable": {
+                    "Detected": 14,
+                    "Not Detected": 0,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 40,
+                    "Not Detected": 0,
+                    "Error": 32
+                }
+            },
+            "34": {
+                "Vulnerable": {
+                    "Detected": 5,
+                    "Not Detected": 4,
+                    "Error": 15
+                },
+                "Safe": {
+                    "Detected": 22,
+                    "Not Detected": 8,
+                    "Error": 30
+                }
+            },
+            "42": {
+                "Vulnerable": {
+                    "Detected": 9,
+                    "Not Detected": 4,
+                    "Error": 23
+                },
+                "Safe": {
+                    "Detected": 15,
+                    "Not Detected": 16,
+                    "Error": 23
+                }
+            },
+            "16": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 3,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 32,
+                    "Not Detected": 8,
+                    "Error": 32
+                }
+            },
+            "18": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 3,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 32,
+                    "Not Detected": 8,
+                    "Error": 32
+                }
+            },
+            "10": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 144
+                }
+            },
+            "11": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 144
+                }
+            },
+            "32": {
+                "Vulnerable": {
+                    "Detected": 5,
+                    "Not Detected": 4,
+                    "Error": 15
+                },
+                "Safe": {
+                    "Detected": 22,
+                    "Not Detected": 8,
+                    "Error": 30
+                }
+            },
+            "13": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 144
+                }
+            },
+            "31": {
+                "Vulnerable": {
+                    "Detected": 7,
+                    "Not Detected": 2,
+                    "Error": 15
+                },
+                "Safe": {
+                    "Detected": 24,
+                    "Not Detected": 6,
+                    "Error": 30
+                }
+            },
+            "7": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 144
+                }
+            },
+            "15": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 3,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 16,
+                    "Error": 64
+                }
+            },
+            "12": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 72
+                }
+            },
+            "5": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 144
+                }
+            },
+            "9": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 144
+                }
+            },
+            "41": {
+                "Vulnerable": {
+                    "Detected": 13,
+                    "Not Detected": 17,
+                    "Error": 18
+                },
+                "Safe": {
+                    "Detected": 19,
+                    "Not Detected": 23,
+                    "Error": 18
+                }
+            },
+            "2": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 3,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 16,
+                    "Error": 64
+                }
+            },
+            "1": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 3,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 16,
+                    "Not Detected": 4,
+                    "Error": 16
+                }
+            },
+            "4": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 3,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 16,
+                    "Error": 64
+                }
+            },
+            "44": {
+                "Vulnerable": {
+                    "Detected": 13,
+                    "Not Detected": 17,
+                    "Error": 18
+                },
+                "Safe": {
+                    "Detected": 20,
+                    "Not Detected": 43,
+                    "Error": 27
+                }
+            },
+            "8": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 150
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 144
+                }
+            }
+        },
+        "CWE127_Buffer_Underread": {
+            "-1": {
+                "Vulnerable": {
+                    "Detected": 416,
+                    "Not Detected": 390,
+                    "Error": 828
+                },
+                "Safe": {
+                    "Detected": 253,
+                    "Not Detected": 1062,
+                    "Error": 1059
+                }
+            },
+            "45": {
+                "Vulnerable": {
+                    "Detected": 36,
+                    "Not Detected": 20,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 23,
+                    "Not Detected": 74,
+                    "Error": 29
+                }
+            },
+            "16": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 32,
+                    "Not Detected": 22,
+                    "Error": 30
+                }
+            },
+            "5": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "34": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 30,
+                    "Not Detected": 24,
+                    "Error": 30
+                }
+            },
+            "4": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 44,
+                    "Error": 60
+                }
+            },
+            "42": {
+                "Vulnerable": {
+                    "Detected": 11,
+                    "Not Detected": 10,
+                    "Error": 27
+                },
+                "Safe": {
+                    "Detected": 17,
+                    "Not Detected": 22,
+                    "Error": 27
+                }
+            },
+            "8": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 192
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "3": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 44,
+                    "Error": 60
+                }
+            },
+            "17": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 38,
+                    "Not Detected": 0,
+                    "Error": 46
+                }
+            },
+            "10": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "6": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 44,
+                    "Error": 60
+                }
+            },
+            "2": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 44,
+                    "Error": 60
+                }
+            },
+            "11": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "9": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "44": {
+                "Vulnerable": {
+                    "Detected": 42,
+                    "Not Detected": 14,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 29,
+                    "Not Detected": 68,
+                    "Error": 29
+                }
+            },
+            "41": {
+                "Vulnerable": {
+                    "Detected": 42,
+                    "Not Detected": 14,
+                    "Error": 16
+                },
+                "Safe": {
+                    "Detected": 28,
+                    "Not Detected": 40,
+                    "Error": 16
+                }
+            },
+            "15": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 64,
+                    "Not Detected": 44,
+                    "Error": 60
+                }
+            },
+            "7": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "12": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 84
+                }
+            },
+            "32": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 30,
+                    "Not Detected": 24,
+                    "Error": 30
+                }
+            },
+            "1": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 16,
+                    "Not Detected": 11,
+                    "Error": 15
+                }
+            },
+            "18": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 32,
+                    "Not Detected": 22,
+                    "Error": 30
+                }
+            },
+            "21": {
+                "Vulnerable": {
+                    "Detected": 4,
+                    "Not Detected": 8,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 16,
+                    "Not Detected": 44,
+                    "Error": 74
+                }
+            },
+            "14": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            },
+            "31": {
+                "Vulnerable": {
+                    "Detected": 23,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 32,
+                    "Not Detected": 22,
+                    "Error": 30
+                }
+            },
+            "13": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 36
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 168
+                }
+            }
+        },
+        "CWE415_Double_Free": {
+            "8": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 42
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "-1": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 90,
+                    "Error": 204
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 168,
+                    "Error": 456
+                }
+            },
+            "42": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 18
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 6,
+                    "Error": 30
+                }
+            },
+            "3": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "34": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "44": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 6,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 12,
+                    "Error": 24
+                }
+            },
+            "15": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "4": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "17": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "13": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "21": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 54
+                }
+            },
+            "10": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "12": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "7": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "6": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "16": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "18": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "2": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "1": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                }
+            },
+            "32": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "5": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "11": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "31": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "14": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "45": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 6,
+                    "Error": 30
+                }
+            },
+            "41": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 6,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 12,
+                    "Error": 12
+                }
+            },
+            "9": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            }
+        },
+        "CWE416_Use_After_Free": {
+            "3": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 1,
+                    "Error": 11
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 4,
+                    "Error": 48
+                }
+            },
+            "13": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 52
+                }
+            },
+            "5": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 52
+                }
+            },
+            "1": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 1,
+                    "Error": 10
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 1,
+                    "Error": 12
+                }
+            },
+            "11": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 52
+                }
+            },
+            "-1": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 12,
+                    "Error": 24
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 24,
+                    "Error": 48
+                }
+            },
+            "12": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 13
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 26
+                }
+            },
+            "7": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 52
+                }
+            },
+            "8": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 50
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 52
+                }
+            },
+            "16": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 1,
+                    "Error": 10
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 2,
+                    "Error": 24
+                }
+            },
+            "4": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 1,
+                    "Error": 11
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 4,
+                    "Error": 48
+                }
+            },
+            "17": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 10
+                },
+                "Safe": {
+                    "Detected": 2,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "6": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 1,
+                    "Error": 11
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 4,
+                    "Error": 48
+                }
+            },
+            "14": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 52
+                }
+            },
+            "10": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 52
+                }
+            },
+            "2": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 1,
+                    "Error": 11
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 4,
+                    "Error": 48
+                }
+            },
+            "18": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 1,
+                    "Error": 10
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 2,
+                    "Error": 24
+                }
+            },
+            "15": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 1,
+                    "Error": 11
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 4,
+                    "Error": 48
+                }
+            },
+            "9": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 52
+                }
+            }
+        },
+        "CWE680_Integer_Overflow_to_Buffer_Overflow": {
+            "17": {
+                "Vulnerable": {
+                    "Detected": 3,
+                    "Not Detected": 0,
+                    "Error": 3
+                },
+                "Safe": {
+                    "Detected": 12,
+                    "Not Detected": 0,
+                    "Error": 0
+                }
+            },
+            "-1": {
+                "Vulnerable": {
+                    "Detected": 41,
+                    "Not Detected": 58,
+                    "Error": 201
+                },
+                "Safe": {
+                    "Detected": 30,
+                    "Not Detected": 174,
+                    "Error": 222
+                }
+            },
+            "7": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "10": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "44": {
+                "Vulnerable": {
+                    "Detected": 7,
+                    "Not Detected": 2,
+                    "Error": 3
+                },
+                "Safe": {
+                    "Detected": 6,
+                    "Not Detected": 12,
+                    "Error": 0
+                }
+            },
+            "11": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "21": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 18
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 48
+                }
+            },
+            "32": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                }
+            },
+            "41": {
+                "Vulnerable": {
+                    "Detected": 7,
+                    "Not Detected": 2,
+                    "Error": 3
+                },
+                "Safe": {
+                    "Detected": 6,
+                    "Not Detected": 6,
+                    "Error": 0
+                }
+            },
+            "6": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "8": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 30
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "5": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "2": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "4": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "18": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                }
+            },
+            "1": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                }
+            },
+            "15": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "42": {
+                "Vulnerable": {
+                    "Detected": 2,
+                    "Not Detected": 4,
+                    "Error": 12
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 12,
+                    "Error": 6
+                }
+            },
+            "14": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "31": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                }
+            },
+            "34": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                }
+            },
+            "45": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 2,
+                    "Error": 9
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 12,
+                    "Error": 6
+                }
+            },
+            "9": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "12": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                }
+            },
+            "3": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            },
+            "16": {
+                "Vulnerable": {
+                    "Detected": 1,
+                    "Not Detected": 0,
+                    "Error": 5
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 12
+                }
+            },
+            "13": {
+                "Vulnerable": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 6
+                },
+                "Safe": {
+                    "Detected": 0,
+                    "Not Detected": 0,
+                    "Error": 24
+                }
+            }
+        }
+    },
+    "results_by_cwe": {}
+}
